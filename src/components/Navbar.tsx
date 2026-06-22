@@ -158,9 +158,7 @@ export default function Navbar() {
 
           {/* Right: Icons */}
           <div className="flex items-center gap-5 md:gap-6 z-50">
-            <button className="hidden md:block text-brand-white hover:text-brand-gold transition-colors duration-500">
-              <Search size={20} strokeWidth={1.5} />
-            </button>
+
             
             <Link href="/wishlist" className="relative text-brand-white hover:text-brand-gold transition-colors duration-500">
               <Heart size={20} strokeWidth={1.5} />
@@ -234,10 +232,7 @@ export default function Navbar() {
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="flex justify-center gap-8 mt-12 pt-12 border-t border-brand-white/10 w-3/4"
               >
-                <button className="text-brand-white/50 hover:text-brand-gold flex flex-col items-center gap-2">
-                  <Search size={24} strokeWidth={1} />
-                  <span className="text-[10px] uppercase tracking-widest">Search</span>
-                </button>
+
                 <button 
                   onClick={() => {
                     setIsMobileMenuOpen(false);
