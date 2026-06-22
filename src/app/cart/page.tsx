@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { products } from "@/lib/data";
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useShop();
+  const { cart, addToCart, removeFromCart, updateQuantity, cartTotal } = useShop();
   const router = useRouter();
 
   const upsellItems = products.filter(p => !cart.find(c => c.id === p.id)).slice(0, 2);
@@ -123,7 +123,7 @@ export default function CartPage() {
                         <p className="text-brand-white/50 text-xs mb-3">₹{item.price.toFixed(2)}</p>
                         <button 
                           onClick={() => {
-                            useShop.getState().addToCart(item); // Note: In a real app we'd get addToCart from context, which we have.
+                            addToCart(item);
                           }}
                           className="text-brand-gold text-xs uppercase tracking-widest font-semibold hover:text-brand-white transition-colors text-left"
                         >
