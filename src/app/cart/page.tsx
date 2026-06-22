@@ -1,8 +1,7 @@
 "use client";
 
 import { useShop } from "@/context/ShopContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,7 +17,6 @@ export default function CartPage() {
 
   return (
     <main className="min-h-screen bg-brand-black w-full flex flex-col">
-      <Navbar />
 
       <div className="flex-1 pt-32 px-6 md:px-12 max-w-[1400px] mx-auto w-full mb-24">
         <div className="mb-12">
@@ -187,8 +185,6 @@ export default function CartPage() {
           </div>
         )}
       </div>
-
-      <Footer />
     </main>
   );
 }

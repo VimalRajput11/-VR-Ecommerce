@@ -3,15 +3,13 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle2, ArrowRight, Package, Truck, Sparkles } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 
 export default function OrderSuccessPage() {
   const orderNumber = `VR-${Math.floor(100000 + Math.random() * 900000)}`;
 
   return (
     <main className="min-h-screen bg-brand-black w-full flex flex-col">
-      <Navbar />
 
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-32 mt-16">
         <div className="max-w-2xl w-full text-center relative z-10">
@@ -97,8 +95,6 @@ export default function OrderSuccessPage() {
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-brand-champagne/5 rounded-full blur-[120px]" />
         </div>
       </div>
-
-      <Footer />
     </main>
   );
 }

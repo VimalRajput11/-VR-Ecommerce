@@ -7,8 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Star, Heart, ShoppingBag, ChevronRight, Ruler, Plus, Minus } from "lucide-react";
 import { products } from "@/lib/data";
 import { useShop } from "@/context/ShopContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 
 export default function ProductPage() {
   const { id } = useParams();
@@ -33,7 +32,6 @@ export default function ProductPage() {
 
   return (
     <main className="min-h-screen bg-brand-black w-full flex flex-col">
-      <Navbar />
 
       <div className="flex-1 pt-32 px-6 md:px-12 max-w-[1600px] mx-auto w-full mb-24">
         {/* Breadcrumb */}
@@ -225,8 +223,6 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </main>
   );
 }

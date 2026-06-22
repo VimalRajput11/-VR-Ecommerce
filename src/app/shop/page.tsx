@@ -7,8 +7,7 @@ import Link from "next/link";
 import { Search, SlidersHorizontal, ChevronDown, Heart, ShoppingBag, Star } from "lucide-react";
 import { products, Product } from "@/lib/data";
 import { useShop } from "@/context/ShopContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 
 const categories = ["All", "Bridal", "Butterfly", "Chrome", "Nude", "Gold Luxury"];
 const sortOptions = ["Featured", "Price: Low to High", "Price: High to Low", "Highest Rated"];
@@ -45,7 +44,6 @@ export default function ShopPage() {
 
   return (
     <main className="min-h-screen bg-brand-black w-full flex flex-col">
-      <Navbar />
 
       <div className="flex-1 pt-32 px-6 md:px-12 max-w-[1600px] mx-auto w-full mb-24">
         {/* Header */}
@@ -222,8 +220,6 @@ export default function ShopPage() {
           </div>
         )}
       </div>
-
-      <Footer />
     </main>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useShop } from "@/context/ShopContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, ShoppingBag, ArrowRight } from "lucide-react";
@@ -13,7 +12,6 @@ export default function WishlistPage() {
 
   return (
     <main className="min-h-screen bg-brand-black w-full flex flex-col">
-      <Navbar />
 
       <div className="flex-1 pt-32 px-6 md:px-12 max-w-[1200px] mx-auto w-full mb-24">
         <div className="text-center mb-16">
@@ -97,8 +95,6 @@ export default function WishlistPage() {
           </div>
         )}
       </div>
-
-      <Footer />
     </main>
   );
 }
