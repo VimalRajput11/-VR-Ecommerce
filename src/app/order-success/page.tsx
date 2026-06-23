@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -55,7 +55,7 @@ export default function OrderSuccessPage() {
               <div className="text-brand-gold pt-1"><Package size={24} strokeWidth={1.5} /></div>
               <div>
                 <h4 className="text-brand-white font-medium mb-1">Processing</h4>
-                <p className="text-brand-white/50 text-xs font-light">Your order is being handcrafted by our artisans. (2-3 business days)</p>
+                <p className="text-brand-white/50 text-xs font-light">Your order is being carefully handcrafted and prepared. (2-3 business days)</p>
               </div>
             </div>
             <div className="flex gap-4">

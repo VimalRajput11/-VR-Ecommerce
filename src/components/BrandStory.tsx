@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -68,13 +68,13 @@ export default function BrandStory() {
             
             <div className="space-y-6 text-brand-white/70 font-light text-base md:text-lg leading-relaxed">
               <p>
-                At VR Nails, we believe your hands are the ultimate canvas. What began as a passionate pursuit of perfection has evolved into a sanctuary of luxury nail artistry.
+                VR Nails is a handmade press-on nail brand focused on elegant, reusable, and premium nail designs. What began as a personal passion for beautiful nails has grown into a dedicated pursuit of quality and craftsmanship.
               </p>
               <p>
-                Every single set that leaves our studio is a testament to uncompromising quality. We do not use machines for painting; instead, master artisans spend hours hand-painting, detailing, and finishing each nail using only the highest-grade salon materials and 24k gold accents.
+                Every single set that leaves our studio is crafted with careful attention to detail. We focus on hand-painting and finishing each nail to ensure a premium look that lasts, using high-quality materials designed for reusability.
               </p>
               <p>
-                The result? A flawless, reusable masterpiece that feels less like a press-on and more like a high-end salon visit. Welcome to the new standard of beauty.
+                The result? A flawless, beautiful set of nails that you can wear again and again. Welcome to a better way to experience premium nails from the comfort of your home.
               </p>
             </div>
             

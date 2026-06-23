@@ -1,4 +1,4 @@
-import BrandStory from "@/components/BrandStory";
+﻿import BrandStory from "@/components/BrandStory";
 
 export default function AboutPage() {
   return (
@@ -12,13 +12,13 @@ export default function AboutPage() {
           </h2>
           <div className="space-y-6 text-brand-white/80 font-light leading-relaxed">
             <p>
-              At VR Nails, we believe that luxury is in the details. Every single press-on nail is a miniature canvas, meticulously handcrafted by expert nail artisans who share a passion for perfection.
+              At VR Nails, we believe that elegance is in the details. Every single press-on nail is a miniature canvas, meticulously handcrafted to bring you beautiful, reusable designs that you can wear with confidence.
             </p>
             <p>
-              We source only the finest materials, from genuine 24k gold leaf accents to premium salon-grade gels, ensuring that your nails not only look spectacular but endure with flawless resilience.
+              We focus on using premium quality materials to ensure that your nails not only look spectacular but endure with flawless resilience, allowing for multiple applications.
             </p>
             <p>
-              Our mission is to empower the modern, elegant woman with the ability to achieve a world-class salon finish in minutes. Because true luxury is not just about aesthetics—it is about the confidence it inspires.
+              Our mission is to empower the modern woman with the ability to achieve a premium, crafted look in minutes. Because true beauty is not just about aesthetics—it is about the confidence it inspires.
             </p>
           </div>
         </div>

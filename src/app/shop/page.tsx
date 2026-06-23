@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,11 +11,17 @@ import { useShop } from "@/context/ShopContext";
 
 const categories = ["All", "Bridal", "Butterfly", "Chrome", "Nude", "Gold Luxury"];
 const sortOptions = ["Featured", "Price: Low to High", "Price: High to Low", "Highest Rated"];
+const shapeOptions = ["All", "Stiletto", "Almond", "Coffin", "Square", "Oval"];
+const lengthOptions = ["All", "Short", "Medium", "Long", "Extra Long"];
+const occasionOptions = ["All", "Everyday", "Wedding", "Party", "Vacation"];
 
 export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("Featured");
+  const [activeShape, setActiveShape] = useState("All");
+  const [activeLength, setActiveLength] = useState("All");
+  const [activeOccasion, setActiveOccasion] = useState("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useShop();
@@ -25,6 +31,18 @@ export default function ShopPage() {
   
   if (activeCategory !== "All") {
     filteredProducts = filteredProducts.filter(p => p.collection === activeCategory);
+  }
+  
+  if (activeShape !== "All") {
+    filteredProducts = filteredProducts.filter(p => p.shape === activeShape);
+  }
+  
+  if (activeLength !== "All") {
+    filteredProducts = filteredProducts.filter(p => p.length === activeLength);
+  }
+  
+  if (activeOccasion !== "All") {
+    filteredProducts = filteredProducts.filter(p => p.occasion === activeOccasion);
   }
   
   if (searchQuery) {
@@ -86,42 +104,96 @@ export default function ShopPage() {
               />
             </div>
             
-            <div className="relative">
+            <div className="flex gap-2 relative z-20">
               <button 
-                onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center gap-2 border border-brand-white/10 bg-brand-white/5 px-4 py-2 text-sm text-brand-white hover:border-brand-gold transition-colors whitespace-nowrap"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 border border-brand-white/10 px-4 py-2 text-sm text-brand-white hover:border-brand-gold transition-colors whitespace-nowrap ${isFilterOpen ? 'bg-brand-gold text-brand-black hover:text-brand-black' : 'bg-brand-white/5'}`}
               >
-                Sort: {sortBy} <ChevronDown size={14} />
+                Filters <SlidersHorizontal size={14} />
               </button>
               
-              <AnimatePresence>
-                {isSortOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 top-full mt-2 w-48 bg-brand-rich-black border border-brand-white/10 shadow-2xl z-20 py-2"
-                  >
-                    {sortOptions.map((opt) => (
-                      <button
-                        key={opt}
-                        onClick={() => {
-                          setSortBy(opt);
-                          setIsSortOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                          sortBy === opt ? "text-brand-gold bg-brand-white/5" : "text-brand-white/70 hover:text-brand-white hover:bg-brand-white/5"
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <div className="relative">
+                <button 
+                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  className="flex items-center gap-2 border border-brand-white/10 bg-brand-white/5 px-4 py-2 text-sm text-brand-white hover:border-brand-gold transition-colors whitespace-nowrap"
+                >
+                  Sort: {sortBy} <ChevronDown size={14} />
+                </button>
+                
+                <AnimatePresence>
+                  {isSortOpen && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute right-0 top-full mt-2 w-48 bg-brand-rich-black border border-brand-white/10 shadow-2xl py-2"
+                    >
+                      {sortOptions.map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => {
+                            setSortBy(opt);
+                            setIsSortOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                            sortBy === opt ? "text-brand-gold bg-brand-white/5" : "text-brand-white/70 hover:text-brand-white hover:bg-brand-white/5"
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Filters Panel */}
+        <AnimatePresence>
+          {isFilterOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mb-12"
+            >
+              <div className="p-6 bg-[#0a0a0a] border border-brand-white/10 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-brand-white/50 mb-2">Shape</label>
+                  <select 
+                    value={activeShape}
+                    onChange={(e) => setActiveShape(e.target.value)}
+                    className="w-full bg-transparent border-b border-brand-white/20 pb-2 text-brand-white focus:outline-none focus:border-brand-gold transition-colors appearance-none"
+                  >
+                    {shapeOptions.map(opt => <option key={opt} value={opt} className="bg-brand-black">{opt}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-brand-white/50 mb-2">Length</label>
+                  <select 
+                    value={activeLength}
+                    onChange={(e) => setActiveLength(e.target.value)}
+                    className="w-full bg-transparent border-b border-brand-white/20 pb-2 text-brand-white focus:outline-none focus:border-brand-gold transition-colors appearance-none"
+                  >
+                    {lengthOptions.map(opt => <option key={opt} value={opt} className="bg-brand-black">{opt}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-brand-white/50 mb-2">Occasion</label>
+                  <select 
+                    value={activeOccasion}
+                    onChange={(e) => setActiveOccasion(e.target.value)}
+                    className="w-full bg-transparent border-b border-brand-white/20 pb-2 text-brand-white focus:outline-none focus:border-brand-gold transition-colors appearance-none"
+                  >
+                    {occasionOptions.map(opt => <option key={opt} value={opt} className="bg-brand-black">{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -212,7 +284,7 @@ export default function ShopPage() {
           <div className="text-center py-24 text-brand-white/50">
             <p className="text-xl font-serif mb-4">No pieces found</p>
             <button 
-              onClick={() => { setActiveCategory("All"); setSearchQuery(""); }}
+              onClick={() => { setActiveCategory("All"); setSearchQuery(""); setActiveShape("All"); setActiveLength("All"); setActiveOccasion("All"); }}
               className="text-brand-gold underline uppercase tracking-widest text-xs"
             >
               Clear Filters

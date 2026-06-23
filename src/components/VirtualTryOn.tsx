@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import { Camera, Upload, Sparkles } from "lucide-react";
@@ -21,7 +21,7 @@ export default function VirtualTryOn() {
             viewport={{ once: true }}
             className="flex items-center justify-center gap-2 text-brand-gold uppercase tracking-[0.4em] text-xs font-semibold mb-4"
           >
-            <Sparkles size={14} /> Augmented Reality
+            <Sparkles size={14} /> Virtual Try-On
           </motion.h2>
           <motion.h3 
             initial={{ opacity: 0, y: 20 }}
@@ -39,7 +39,7 @@ export default function VirtualTryOn() {
             transition={{ delay: 0.2 }}
             className="text-brand-white/70 max-w-2xl mx-auto font-light text-base md:text-lg"
           >
-            Experience our entire collection virtually. Upload a photo of your hand and instantly see how our luxury press-on nails look on you, powered by advanced AR.
+            Get ready to experience our entire collection virtually. Soon, you will be able to upload a photo of your hand and instantly see how our luxury press-on nails look on you.
           </motion.p>
         </div>
 
@@ -69,22 +69,17 @@ export default function VirtualTryOn() {
 
             {/* Right Side: Upload Area */}
             <div className="p-8 md:p-12 flex flex-col justify-center items-center text-center relative z-10">
-              <div className="w-20 h-20 rounded-full border border-brand-gold/30 bg-brand-gold/10 flex items-center justify-center mb-6 text-brand-gold relative">
-                <Upload size={32} strokeWidth={1} />
-                <motion.div 
-                  className="absolute inset-0 border border-brand-gold rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
+              <div className="inline-block px-4 py-1 mb-6 border border-brand-gold text-brand-gold text-[10px] uppercase tracking-widest font-bold">
+                Coming Soon
               </div>
               
-              <h4 className="text-brand-white font-serif text-2xl mb-2">Upload Hand Image</h4>
+              <h4 className="text-brand-white font-serif text-2xl mb-2">Virtual Try-On Feature</h4>
               <p className="text-brand-white/50 text-sm mb-8 font-light max-w-[250px]">
-                Ensure your hand is flat on a well-lit surface for accurate mapping.
+                We are currently perfecting our virtual fitting room. Check back soon for this exciting new feature.
               </p>
               
-              <button className="flex items-center justify-center gap-3 w-full py-4 bg-brand-gold text-brand-black text-sm font-semibold uppercase tracking-widest hover:bg-brand-white transition-colors duration-500">
-                <Camera size={18} /> Try On Your Hand
+              <button disabled className="flex items-center justify-center gap-3 w-full py-4 bg-brand-white/10 text-brand-white/40 text-sm font-semibold uppercase tracking-widest cursor-not-allowed">
+                <Camera size={18} /> Available Soon
               </button>
             </div>
 

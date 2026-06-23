@@ -1,4 +1,4 @@
-import { Mail, MessageCircle, MapPin, Clock } from "lucide-react";
+﻿import { Mail, MessageCircle, Clock, Instagram } from "lucide-react";
 
 export default function ContactPage() {
   return (
@@ -43,7 +43,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h4 className="text-brand-white font-medium mb-1">WhatsApp Client Care</h4>
-                  <p className="text-brand-white/50 text-sm font-light">+1 (555) 123-4567</p>
+                  <p className="text-brand-white/50 text-sm font-light">+91 98765 43210</p>
                   <p className="text-brand-white/50 text-sm font-light">Instant messaging support</p>
                 </div>
               </div>
@@ -54,19 +54,19 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h4 className="text-brand-white font-medium mb-1">Operating Hours</h4>
-                  <p className="text-brand-white/50 text-sm font-light">Monday - Friday</p>
-                  <p className="text-brand-white/50 text-sm font-light">9:00 AM - 6:00 PM EST</p>
+                  <p className="text-brand-white/50 text-sm font-light">Monday - Saturday</p>
+                  <p className="text-brand-white/50 text-sm font-light">10:00 AM - 7:00 PM IST</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 border border-brand-white/10 rounded-sm flex items-center justify-center text-brand-gold flex-shrink-0">
-                  <MapPin size={20} strokeWidth={1.5} />
+                  <Instagram size={20} strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h4 className="text-brand-white font-medium mb-1">Studio Atelier</h4>
-                  <p className="text-brand-white/50 text-sm font-light">123 Luxury Avenue</p>
-                  <p className="text-brand-white/50 text-sm font-light">New York, NY 10001</p>
+                  <h4 className="text-brand-white font-medium mb-1">Instagram</h4>
+                  <p className="text-brand-white/50 text-sm font-light">@vr_nails</p>
+                  <p className="text-brand-white/50 text-sm font-light">Tag us in your looks</p>
                 </div>
               </div>
             </div>

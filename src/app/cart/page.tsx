@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useShop } from "@/context/ShopContext";
 

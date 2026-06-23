@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -21,7 +21,7 @@ export default function Footer() {
         <div className="md:col-span-1">
           <Link href="/" className="block mb-6 relative w-20 h-20">
             <Image 
-              src="/logo.png" 
+              src="/vr_logo.png" 
               alt="VR Nails Logo" 
               fill 
               className="object-contain mix-blend-screen"
@@ -79,10 +79,10 @@ export default function Footer() {
               <span className="font-semibold text-brand-white">Email:</span> hello@vrnails.com
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-brand-white">WhatsApp:</span> +1 (555) 123-4567
+              <span className="font-semibold text-brand-white">WhatsApp:</span> +91 98765 43210
             </li>
             <li className="flex gap-2">
-              <span className="font-semibold text-brand-white">Hours:</span> Mon-Fri, 9am - 6pm EST
+              <span className="font-semibold text-brand-white">Hours:</span> Mon-Sat, 10am - 7pm IST
             </li>
           </ul>
         </div>

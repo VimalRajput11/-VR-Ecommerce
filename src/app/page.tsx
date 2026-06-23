@@ -1,4 +1,4 @@
-
+﻿
 import Hero from "@/components/Hero";
 import FeaturedCollections from "@/components/FeaturedCollections";
 import NewArrivals from "@/components/NewArrivals";

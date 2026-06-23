@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 import Image from "next/image";
@@ -38,35 +38,13 @@ export default function Hero() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX, mouseY]);
 
-  // Floating particles
-  const particles = Array.from({ length: 15 });
 
   return (
     <section className="relative min-h-screen w-full flex items-center overflow-hidden bg-brand-black pt-20">
       {/* Background Glow */}
       <div className="absolute top-1/2 right-1/4 w-[800px] h-[800px] bg-brand-gold/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
 
-      {/* Floating Particles */}
-      {isClient && particles.map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute w-1 h-1 bg-brand-gold/40 rounded-full blur-[1px]"
-          initial={{
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-          }}
-          animate={{
-            y: [null, Math.random() * -200 - 100],
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: Math.random() * 5 + 5,
-            repeat: Infinity,
-            ease: "linear",
-            delay: Math.random() * 5,
-          }}
-        />
-      ))}
+
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
         
@@ -101,13 +79,13 @@ export default function Hero() {
           >
             <Link 
               href="/shop"
-              className="px-10 py-4 bg-brand-white text-brand-black font-semibold uppercase tracking-widest text-sm hover:bg-brand-gold transition-colors duration-500 w-full sm:w-auto text-center"
+              className="px-12 py-5 bg-brand-white text-brand-black font-bold uppercase tracking-widest text-base hover:bg-brand-gold transition-colors duration-500 w-full sm:w-auto text-center shadow-lg"
             >
               Shop Collection
             </Link>
             <Link 
               href="/gallery"
-              className="px-10 py-4 glass text-brand-white border border-brand-white/20 font-semibold uppercase tracking-widest text-sm hover:bg-brand-white/10 hover:border-brand-gold/50 transition-all duration-500 w-full sm:w-auto text-center"
+              className="px-12 py-5 glass text-brand-white border border-brand-white/20 font-bold uppercase tracking-widest text-base hover:bg-brand-white/10 hover:border-brand-gold/50 transition-all duration-500 w-full sm:w-auto text-center shadow-lg"
             >
               Explore Designs
             </Link>
@@ -145,17 +123,7 @@ export default function Hero() {
             {/* Overlay Gradient for depth */}
             <div className="absolute inset-0 rounded-t-full rounded-b-lg bg-gradient-to-t from-brand-black/80 via-transparent to-transparent" />
             
-            {/* Floating element 1 */}
-            <motion.div 
-              className="absolute -right-10 top-1/4 glass p-4 rounded-xl hidden md:flex flex-col items-center gap-2 transform translate-z-50 border border-brand-gold/30"
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <div className="w-12 h-12 rounded-full overflow-hidden relative">
-                <Image src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=100&w=2400" fill sizes="48px" className="object-cover" alt="Detail" />
-              </div>
-              <span className="text-[10px] text-brand-gold tracking-widest uppercase">24k Detail</span>
-            </motion.div>
+
 
             {/* Floating element 2 */}
             <motion.div 

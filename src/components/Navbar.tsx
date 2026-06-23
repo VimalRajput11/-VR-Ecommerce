@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -63,7 +63,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <div className="relative w-16 h-16 flex items-center justify-center">
-              <Image src="/logo.png" alt="VR Nails Logo" fill className="object-contain" />
+              <Image src="/vr_logo.png" alt="VR Nails Logo" fill className="object-contain" />
             </div>
           </Link>
           <div className="flex items-center gap-2 text-brand-gold text-sm tracking-widest uppercase font-medium">
@@ -81,7 +81,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <div className="relative w-16 h-16 flex items-center justify-center">
-              <Image src="/logo.png" alt="VR Nails Logo" fill className="object-contain" />
+              <Image src="/vr_logo.png" alt="VR Nails Logo" fill className="object-contain" />
             </div>
           </Link>
           <Link href="/shop" className="text-brand-white hover:text-brand-gold transition-colors uppercase tracking-widest text-xs flex items-center gap-2">
@@ -99,7 +99,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <Link href="/" className="flex items-center">
             <div className="relative w-16 h-16 flex items-center justify-center">
-              <Image src="/logo.png" alt="VR Nails Logo" fill className="object-contain mix-blend-screen" />
+              <Image src="/vr_logo.png" alt="VR Nails Logo" fill className="object-contain mix-blend-screen" />
             </div>
           </Link>
           <Link href="/cart" className="relative text-brand-gold">
@@ -129,7 +129,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center z-50">
             <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
               <Image 
-                src="/logo.png" 
+                src="/vr_logo.png" 
                 alt="VR Nails Logo" 
                 fill 
                 className="object-contain mix-blend-screen"
@@ -187,12 +187,14 @@ export default function Navbar() {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden text-brand-white hover:text-brand-gold transition-colors relative w-6 h-6 flex flex-col justify-center items-center gap-[5px]"
+              className="lg:hidden text-brand-white hover:text-brand-gold transition-colors relative w-6 h-6 flex items-center justify-center"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <span className={`w-6 h-[1.5px] bg-current transform transition-all duration-300 ${isMobileMenuOpen ? "rotate-45 translate-y-[6.5px]" : ""}`} />
-              <span className={`w-6 h-[1.5px] bg-current transition-all duration-300 ${isMobileMenuOpen ? "opacity-0" : ""}`} />
-              <span className={`w-6 h-[1.5px] bg-current transform transition-all duration-300 ${isMobileMenuOpen ? "-rotate-45 -translate-y-[6.5px]" : ""}`} />
+              {isMobileMenuOpen ? (
+                <X size={24} strokeWidth={1.5} />
+              ) : (
+                <Menu size={24} strokeWidth={1.5} />
+              )}
             </button>
           </div>
         </div>
@@ -241,7 +243,7 @@ export default function Navbar() {
                   className="text-brand-white/50 hover:text-brand-gold flex flex-col items-center gap-2"
                 >
                   <User size={24} strokeWidth={1} />
-                  <span className="text-[10px] uppercase tracking-widest">Profile</span>
+                  <span className="text-[10px] uppercase tracking-widest">Sign In</span>
                 </button>
               </motion.div>
             </div>

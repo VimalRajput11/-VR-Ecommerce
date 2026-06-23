@@ -1,4 +1,4 @@
-export interface Review {
+﻿export interface Review {
   id: string;
   author: string;
   rating: number;
@@ -18,14 +18,17 @@ export interface Product {
   reviews: Review[];
   isNewArrival?: boolean;
   isBestSeller?: boolean;
+  shape?: string;
+  length?: string;
+  occasion?: string;
 }
 
 const descriptions = {
-  Bridal: "Elegance redefined for your special day. Our Bridal collection features delicate lacework, soft pearls, and a timeless white finish to complement the most important dress you will ever wear.",
-  Butterfly: "Embrace ethereal beauty with hand-painted butterfly motifs, iridescent wings, and delicate crystal accents. Perfect for a whimsical, dreamy aesthetic.",
-  Chrome: "A striking mirror finish that demands attention. Our Chrome collection delivers futuristic high-shine and unparalleled bold glamour.",
-  Nude: "The ultimate everyday luxury. Perfectly matched to your skin tone for an elongated, sophisticated, and flawlessly natural look.",
-  "Gold Luxury": "Opulence at your fingertips. Crafted with 24k gold leaf accents, premium metallic finishes, and intricate detailing for true royalty."
+  Bridal: "Elegant designs created for weddings and special occasions.",
+  Butterfly: "Inspired by delicate artistic details.",
+  Chrome: "Modern metallic finishes with a premium look.",
+  Nude: "Perfectly matched to your skin tone for an everyday natural look.",
+  "Gold Luxury": "Crafted with attention to detail, premium metallic finishes for an elegant statement."
 };
 
 const imageMap = {
@@ -35,15 +38,15 @@ const imageMap = {
   ],
   Butterfly: [
     "https://images.unsplash.com/photo-1516975080661-46b0d91244e8?auto=format&fit=crop&q=100&w=2400",
-    "https://images.unsplash.com/photo-1620002093390-1c3905e0423c?auto=format&fit=crop&q=100&w=2400"
+    "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=100&w=2400"
   ],
   Chrome: [
-    "https://images.unsplash.com/photo-1595868840228-5e8c13f6406e?auto=format&fit=crop&q=100&w=2400",
-    "https://images.unsplash.com/photo-1595085340058-2e389df310ab?auto=format&fit=crop&q=100&w=2400"
+    "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=100&w=2400",
+    "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=100&w=2400"
   ],
   Nude: [
     "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=100&w=2400",
-    "https://images.unsplash.com/photo-1595868840228-5e8c13f6406e?auto=format&fit=crop&q=100&w=2400"
+    "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=100&w=2400"
   ],
   "Gold Luxury": [
     "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=100&w=2400",
@@ -56,8 +59,9 @@ export const products: Product[] = Array.from({ length: 30 }).map((_, i) => {
   const collections = ["Bridal", "Butterfly", "Chrome", "Nude", "Gold Luxury"] as const;
   const collection = collections[i % collections.length];
   
-  const basePrice = collection === "Gold Luxury" ? 1499 : collection === "Bridal" ? 999 : 699;
-  const price = basePrice + (i * 73 % 400);
+  const basePrices = [799, 999, 1199, 1299, 1499, 1799];
+  const priceIndex = (collection === "Gold Luxury" ? 4 : collection === "Bridal" ? 3 : collection === "Chrome" ? 2 : collection === "Butterfly" ? 1 : 0) + (i % 2);
+  const price = basePrices[Math.min(priceIndex, basePrices.length - 1)];
   
   const rating = 4.5 + ((i * 3 % 5) / 10); // deterministic 4.5 to 4.9
   const reviewsCount = 20 + (i * 13 % 200);
@@ -65,6 +69,10 @@ export const products: Product[] = Array.from({ length: 30 }).map((_, i) => {
   const adjectives = ["Luminous", "Ethereal", "Midnight", "Velvet", "Royal", "Enchanted", "Signature", "Radiant", "Imperial", "Gilded"];
   const nameSuffixes = ["Stiletto", "Almond", "Coffin", "Square", "Oval"];
   const name = `${adjectives[i % adjectives.length]} ${collection} ${nameSuffixes[(i * 5) % nameSuffixes.length]}`;
+
+  const lengths = ["Short", "Medium", "Long", "Extra Long"];
+  const occasions = ["Everyday", "Wedding", "Party", "Vacation"];
+  const shape = nameSuffixes[(i * 5) % nameSuffixes.length];
 
   return {
     id: `prod-${i + 1}`,
@@ -77,6 +85,9 @@ export const products: Product[] = Array.from({ length: 30 }).map((_, i) => {
     images: imageMap[collection],
     isNewArrival: i < 5,
     isBestSeller: i % 4 === 0,
+    shape,
+    length: lengths[i % lengths.length],
+    occasion: occasions[i % occasions.length],
     reviews: [
       {
         id: `rev-${i}-1`,

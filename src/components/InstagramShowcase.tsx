@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -10,8 +10,8 @@ const InstagramIcon = ({ size = 24, strokeWidth = 2, className = "" }) => (
 
 const instagramPosts = [
   "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=100&w=2400",
-  "https://images.unsplash.com/photo-1595868840228-5e8c13f6406e?auto=format&fit=crop&q=100&w=2400",
-  "https://images.unsplash.com/photo-1620002093390-1c3905e0423c?auto=format&fit=crop&q=100&w=2400",
+  "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=100&w=2400",
+  "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=100&w=2400",
   "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=100&w=2400",
   "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=100&w=2400"
 ];

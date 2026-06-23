@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ShopProvider } from "@/context/ShopContext";
@@ -19,6 +19,9 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "VR Nails | Luxury Handmade Press-On Nails",
   description: "Crafted for Every Mood, Designed for Every Occasion. Premium handmade press-on nails for the modern elegant woman.",
+  icons: {
+    icon: '/favicon.png?v=2',
+  },
 };
 
 export default function RootLayout({

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -23,7 +23,7 @@ export default function LuxuryBanner() {
         className="absolute inset-0 w-full h-[140%] -top-[20%] z-0"
       >
         <Image
-          src="https://images.unsplash.com/photo-1595868840228-5e8c13f6406e?auto=format&fit=crop&q=100&w=2400"
+          src="https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&q=100&w=2400"
           alt="Luxury At Your Fingertips"
           fill
           className="object-cover"
@@ -63,7 +63,7 @@ export default function LuxuryBanner() {
           transition={{ duration: 1, delay: 0.4 }}
           className="text-brand-white/80 text-lg md:text-xl font-light mb-10 max-w-2xl mx-auto tracking-wide"
         >
-          Every set is designed to make a statement. Experience museum-quality detailing delivered straight to your door.
+          Every set is designed to make a statement. Experience premium quality styling delivered straight to your door.
         </motion.p>
         
         <motion.div
