@@ -1,4 +1,8 @@
-﻿import { Mail, MessageCircle, Clock, Instagram } from "lucide-react";
+import { Mail, MessageCircle, Clock } from "lucide-react";
+
+const InstagramIcon = ({ size = 24, strokeWidth = 2, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+);
 
 export default function ContactPage() {
   return (
@@ -61,7 +65,7 @@ export default function ContactPage() {
 
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 border border-brand-white/10 rounded-sm flex items-center justify-center text-brand-gold flex-shrink-0">
-                  <Instagram size={20} strokeWidth={1.5} />
+                  <InstagramIcon size={20} strokeWidth={1.5} />
                 </div>
                 <div>
                   <h4 className="text-brand-white font-medium mb-1">Instagram</h4>
