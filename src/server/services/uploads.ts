@@ -37,8 +37,17 @@ export async function saveImage(file: File, folder: string): Promise<string> {
   const name = `${Date.now()}-${randomBytes(6).toString("hex")}.${kind.ext}`;
 
   if (usingBlobStorage()) {
-    const blob = await put(`${safeFolder}/${name}`, buf, { access: "public", contentType: kind.mime, addRandomSuffix: false });
-    return blob.url;
+    try {
+      const blob = await put(`${safeFolder}/${name}`, buf, { access: "public", contentType: kind.mime, addRandomSuffix: false });
+      return blob.url;
+    } catch (err) {
+      console.error("[uploads] Vercel Blob upload failed", err);
+      throw new ApiError(
+        502,
+        "Image upload to Vercel Blob failed. Website images need a Blob store created with Public access — check the Storage settings in Vercel.",
+        "uploads_failed",
+      );
+    }
   }
   if (process.env.VERCEL) {
     throw new ApiError(503, "Image uploads need Vercel Blob storage. Connect a Blob store to this project, or use an image link instead.", "uploads_unavailable");
