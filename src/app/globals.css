@@ -1,19 +1,39 @@
 @import "tailwindcss";
 
+/* VG Unisex Saloon design tokens: charcoal, warm ivory, champagne gold, muted beige. */
 @theme inline {
-  --color-brand-black: #050505;
-  --color-brand-rich-black: #0D0D0D;
-  --color-brand-gold: #D4AF37;
-  --color-brand-champagne: #F5E7A1;
-  --color-brand-white: #FFFFFF;
+  --color-charcoal: #1b1a18;
+  --color-charcoal-soft: #2a2825;
+  --color-ivory: #faf6ef;
+  --color-cream: #f3ece0;
+  --color-beige: #e6dccb;
+  --color-sand: #cfc1aa;
+  --color-gold: #c2a26b; /* decorative / on dark backgrounds */
+  --color-gold-deep: #85652f; /* text & controls on light backgrounds (AA contrast) */
+  --color-stone: #5f5850; /* secondary text on light */
+  --color-mist: #b9b2a7; /* secondary text on dark */
+  --color-success: #2f6b45;
+  --color-warning: #8a5a00;
+  --color-danger: #a23b2a;
+
+  /* Legacy aliases kept so any remaining brand-* classes still render on-palette. */
+  --color-brand-black: #1b1a18;
+  --color-brand-rich-black: #2a2825;
+  --color-brand-gold: #c2a26b;
+  --color-brand-champagne: #e6dccb;
+  --color-brand-white: #faf6ef;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
 }
 
 :root {
-  --background: var(--color-brand-black);
-  --foreground: var(--color-brand-white);
+  --background: var(--color-ivory);
+  --foreground: var(--color-charcoal);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -22,33 +42,43 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Custom Utilities for Luxury Vibe */
-@utility glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+:focus-visible {
+  outline: 2px solid var(--color-gold-deep);
+  outline-offset: 2px;
 }
 
-@utility gold-gradient-text {
-  background: linear-gradient(to right, #D4AF37, #F7E7CE, #D4AF37);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-@utility gold-glow {
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
-}
-
-@utility text-glow {
-  text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @utility hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@utility eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
   }
 }

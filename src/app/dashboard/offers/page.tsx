@@ -1,0 +1,189 @@
+"use client";
+
+import { useState } from "react";
+import { apiFetch, ApiClientError, useApi } from "@/lib/api";
+import { useToast } from "@/context/ToastContext";
+import { RequirePermission } from "@/components/dashboard/DashboardShell";
+import { Alert, Badge, Button, Checkbox, EmptyState, ErrorState, Input, Modal, PageHeader, Select, Spinner, Table, Td, Textarea, Th } from "@/components/ui";
+import { istLocalToIso } from "@/components/dashboard/StaffForms";
+import { formatINR, paiseToRupees, rupeesToPaise } from "@/lib/money";
+import { dateKeyIST, formatDate } from "@/lib/time";
+
+interface Coupon {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  kind: string;
+  type: "percent" | "flat";
+  value: number;
+  maxDiscount: number;
+  minSubtotal: number;
+  startsAt: string;
+  endsAt: string;
+  maxRedemptions: number;
+  perCustomerLimit: number;
+  redemptions: number;
+  firstVisitOnly: boolean;
+  showOnWebsite: boolean;
+  active: boolean;
+}
+
+const KINDS: Record<string, string> = { general: "General", seasonal: "Seasonal", festival: "Festival", first_visit: "First visit", referral: "Referral" };
+
+export default function OffersPage() {
+  return (
+    <RequirePermission any={["offers.manage"]}>
+      <Offers />
+    </RequirePermission>
+  );
+}
+
+function Offers() {
+  const { data, error, loading, reload } = useApi<{ coupons: Coupon[] }>("/api/admin/coupons");
+  const [editing, setEditing] = useState<Coupon | "new" | null>(null);
+  const [now] = useState(() => Date.now());
+  return (
+    <div>
+      <PageHeader
+        title="Offers & coupons"
+        description="Seasonal, festival, first-visit and referral discounts. Limits and dates are enforced at billing."
+        actions={<Button onClick={() => setEditing("new")}>New offer</Button>}
+      />
+      {error && <ErrorState error={error} onRetry={reload} />}
+      {loading && !data ? (
+        <Spinner />
+      ) : !data?.coupons.length ? (
+        <EmptyState title="No offers yet" action={<Button onClick={() => setEditing("new")}>Create your first offer</Button>} />
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th>Code</Th>
+              <Th>Offer</Th>
+              <Th>Discount</Th>
+              <Th>Valid</Th>
+              <Th>Used</Th>
+              <Th>Status</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.coupons.map((c) => {
+              const live = c.active && new Date(c.startsAt).getTime() <= now && new Date(c.endsAt).getTime() >= now;
+              return (
+                <tr key={c.id} className="cursor-pointer hover:bg-cream/50" onClick={() => setEditing(c)}>
+                  <Td className="font-mono font-semibold">{c.code}</Td>
+                  <Td>
+                    {c.title}
+                    <span className="block text-xs text-stone">{KINDS[c.kind]}{c.showOnWebsite ? " · on website" : ""}</span>
+                  </Td>
+                  <Td>{c.type === "percent" ? `${c.value}%` : formatINR(c.value)}</Td>
+                  <Td className="text-xs">
+                    {formatDate(c.startsAt)} – {formatDate(c.endsAt)}
+                  </Td>
+                  <Td>
+                    {c.redemptions}
+                    {c.maxRedemptions ? ` / ${c.maxRedemptions}` : ""}
+                  </Td>
+                  <Td>{live ? <Badge className="bg-[#eef5ef] text-success">Live</Badge> : <Badge>{c.active ? "Scheduled / ended" : "Off"}</Badge>}</Td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      )}
+      {editing && <CouponModal coupon={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={reload} />}
+    </div>
+  );
+}
+
+const toLocal = (iso: string) => {
+  const d = new Date(new Date(iso).getTime() + 330 * 60_000);
+  return d.toISOString().slice(0, 16);
+};
+
+function CouponModal({ coupon, onClose, onSaved }: { coupon: Coupon | null; onClose: () => void; onSaved: () => void }) {
+  const toast = useToast();
+  const today = dateKeyIST();
+  const [f, setF] = useState({
+    code: coupon?.code ?? "",
+    title: coupon?.title ?? "",
+    description: coupon?.description ?? "",
+    kind: coupon?.kind ?? "general",
+    type: coupon?.type ?? "percent",
+    value: coupon ? String(coupon.type === "flat" ? paiseToRupees(coupon.value) : coupon.value) : "",
+    maxDiscount: coupon?.maxDiscount ? String(paiseToRupees(coupon.maxDiscount)) : "",
+    minSubtotal: coupon?.minSubtotal ? String(paiseToRupees(coupon.minSubtotal)) : "",
+    startsAt: coupon ? toLocal(coupon.startsAt) : `${today}T00:00`,
+    endsAt: coupon ? toLocal(coupon.endsAt) : `${today}T23:59`,
+    maxRedemptions: String(coupon?.maxRedemptions ?? 0),
+    perCustomerLimit: String(coupon?.perCustomerLimit ?? 1),
+    firstVisitOnly: coupon?.firstVisitOnly ?? false,
+    showOnWebsite: coupon?.showOnWebsite ?? false,
+    active: coupon?.active ?? true,
+  });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<ApiClientError | null>(null);
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    const body = {
+      ...f,
+      value: f.type === "flat" ? rupeesToPaise(Number(f.value)) : Math.round(Number(f.value)),
+      maxDiscount: f.maxDiscount ? rupeesToPaise(Number(f.maxDiscount)) : 0,
+      minSubtotal: f.minSubtotal ? rupeesToPaise(Number(f.minSubtotal)) : 0,
+      startsAt: istLocalToIso(f.startsAt),
+      endsAt: istLocalToIso(f.endsAt),
+      maxRedemptions: Number(f.maxRedemptions) || 0,
+      perCustomerLimit: Math.max(1, Number(f.perCustomerLimit) || 1),
+    };
+    try {
+      if (coupon) await apiFetch(`/api/admin/coupons/${coupon.id}`, { method: "PATCH", body });
+      else await apiFetch("/api/admin/coupons", { body });
+      toast("Offer saved.");
+      onSaved();
+      onClose();
+    } catch (e) {
+      setError(e as ApiClientError);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal open onClose={onClose} title={coupon ? `Edit ${coupon.code}` : "New offer"} size="lg" footer={<Button onClick={save} loading={busy}>Save</Button>}>
+      {error && <Alert tone="error" className="mb-4">{error.message}</Alert>}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input label="Code" required value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} hint="Letters, numbers, - and _" />
+        <Input label="Title" required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="e.g. Diwali Glow Offer" />
+        <Textarea label="Description" rows={2} wrapClassName="sm:col-span-2" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+        <Select label="Kind" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}>
+          {Object.entries(KINDS).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </Select>
+        <div className="grid grid-cols-[90px_1fr] gap-2">
+          <Select label="Type" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value as "percent" | "flat" })}>
+            <option value="percent">%</option>
+            <option value="flat">₹</option>
+          </Select>
+          <Input label="Value" type="number" min={1} required value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} />
+        </div>
+        {f.type === "percent" && <Input label="Max discount (₹)" type="number" min={0} value={f.maxDiscount} onChange={(e) => setF({ ...f, maxDiscount: e.target.value })} hint="Blank = no cap" />}
+        <Input label="Minimum bill (₹)" type="number" min={0} value={f.minSubtotal} onChange={(e) => setF({ ...f, minSubtotal: e.target.value })} />
+        <Input label="Starts (IST)" type="datetime-local" value={f.startsAt} onChange={(e) => setF({ ...f, startsAt: e.target.value })} />
+        <Input label="Ends (IST)" type="datetime-local" value={f.endsAt} onChange={(e) => setF({ ...f, endsAt: e.target.value })} />
+        <Input label="Total redemption limit" type="number" min={0} value={f.maxRedemptions} onChange={(e) => setF({ ...f, maxRedemptions: e.target.value })} hint="0 = unlimited" />
+        <Input label="Uses per customer" type="number" min={1} value={f.perCustomerLimit} onChange={(e) => setF({ ...f, perCustomerLimit: e.target.value })} />
+        <div className="space-y-2 sm:col-span-2">
+          <Checkbox label="First visit only" checked={f.firstVisitOnly || f.kind === "first_visit"} disabled={f.kind === "first_visit"} onChange={(e) => setF({ ...f, firstVisitOnly: e.target.checked })} />
+          <Checkbox label="Show on website (Offers page)" checked={f.showOnWebsite} onChange={(e) => setF({ ...f, showOnWebsite: e.target.checked })} />
+          <Checkbox label="Active" checked={f.active} onChange={(e) => setF({ ...f, active: e.target.checked })} />
+        </div>
+      </div>
+    </Modal>
+  );
+}

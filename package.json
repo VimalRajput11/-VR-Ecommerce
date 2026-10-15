@@ -1,32 +1,36 @@
 {
-  "name": "vr-nails",
-  "version": "0.1.0",
+  "name": "vg-unisex-saloon",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsx --test tests/unit.test.ts tests/integration.test.mts",
+    "seed": "tsx scripts/seed.ts",
+    "create-owner": "tsx scripts/create-owner.ts",
+    "typecheck": "tsc --noEmit",
+    "seed:demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
+    "@vercel/blob": "^2.8.2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.21.0",
+    "mongoose": "^8.24.5",
     "next": "16.2.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "three": "^0.184.0"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.184.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

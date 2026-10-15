@@ -1,255 +1,128 @@
 ﻿"use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Menu, X, Heart, User, Search, Lock, ChevronRight } from "lucide-react";
-import { useShop } from "@/context/ShopContext";
+import { Menu, X, User, CalendarDays } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { cx } from "@/components/ui";
 
-export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { cart, wishlist, setIsCartOpen, setIsAuthModalOpen } = useShop();
+const NAV_LINKS = [
+  { name: "Services", href: "/services" },
+  { name: "Offers", href: "/offers" },
+  { name: "Gallery", href: "/gallery" },
+  { name: "Reviews", href: "/reviews" },
+  { name: "About", href: "/about" },
+  { name: "Contact", href: "/contact" },
+];
+
+export default function Navbar({ businessName, announcement }: { businessName: string; announcement?: string }) {
   const pathname = usePathname();
-
-  const isShopOrProduct = pathname?.startsWith("/shop") || pathname?.startsWith("/product");
-  const isCart = pathname === "/cart";
-  const isCheckout = pathname === "/checkout";
-  const isOrderSuccess = pathname === "/order-success";
+  const { user } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const overHero = pathname === "/" && !scrolled;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 80);
-    };
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Initial check
-    return () => window.removeEventListener("scroll", handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Lock body scroll when mobile menu is open
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
+
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-  }, [isMobileMenuOpen]);
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Collections", href: "/collections" },
-    { name: "Shop", href: "/shop" },
-    { name: "Gallery", href: "/gallery" },
-    { name: "Contact", href: "/contact" },
-    { name: "About", href: "/about" },
-  ];
+  const accountHref = user ? (user.role === "customer" ? "/account" : "/dashboard") : "/login";
+  const accountLabel = user ? (user.role === "customer" ? "My account" : "Dashboard") : "Sign in";
 
-  const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-
-  // Background style logic
-  let headerClasses = "fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-in-out ";
-  if (isCheckout || isOrderSuccess || isCart || isShopOrProduct || isScrolled) {
-    headerClasses += "bg-brand-black/95 backdrop-blur-md border-b border-brand-gold/20 py-4";
-  } else {
-    headerClasses += "bg-transparent py-6";
-  }
-
-  // --- CHECKOUT NAVBAR ---
-  if (isCheckout) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-brand-black border-b border-brand-white/10 py-4">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <Image src="/vr_logo.png" alt="VR Nails Logo" fill className="object-contain" />
-            </div>
-          </Link>
-          <div className="flex items-center gap-2 text-brand-gold text-sm tracking-widest uppercase font-medium">
-            <Lock size={16} /> Secure Checkout
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  // --- ORDER SUCCESS NAVBAR ---
-  if (isOrderSuccess) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-brand-black border-b border-brand-white/10 py-4">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <Image src="/vr_logo.png" alt="VR Nails Logo" fill className="object-contain" />
-            </div>
-          </Link>
-          <Link href="/shop" className="text-brand-white hover:text-brand-gold transition-colors uppercase tracking-widest text-xs flex items-center gap-2">
-            Continue Shopping <ChevronRight size={14} />
-          </Link>
-        </div>
-      </header>
-    );
-  }
-
-  // --- CART NAVBAR ---
-  if (isCart) {
-    return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-brand-black/95 backdrop-blur-md border-b border-brand-gold/20 py-4">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <Link href="/" className="flex items-center">
-            <div className="relative w-16 h-16 flex items-center justify-center">
-              <Image src="/vr_logo.png" alt="VR Nails Logo" fill className="object-contain mix-blend-screen" />
-            </div>
-          </Link>
-          <Link href="/cart" className="relative text-brand-gold">
-            <ShoppingBag size={24} strokeWidth={1.5} />
-            {cartItemCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-brand-white text-brand-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {cartItemCount}
-              </span>
-            )}
-          </Link>
-        </div>
-      </header>
-    );
-  }
-
-  // --- MAIN NAVBAR (Home, Shop, Product, About, Gallery) ---
   return (
     <>
-      <motion.header
-        className={headerClasses}
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      {announcement && (
+        <div className="relative z-50 bg-gold px-4 py-2 text-center text-xs font-medium text-charcoal">{announcement}</div>
+      )}
+      <header
+        className={cx(
+          "sticky top-0 z-40 transition-colors duration-300",
+          overHero ? "bg-charcoal/40 backdrop-blur-sm md:bg-transparent md:backdrop-blur-0" : "bg-charcoal/95 shadow-sm backdrop-blur",
+          pathname === "/" && "-mb-[76px]",
+        )}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
-          {/* Left: Logo */}
-          <Link href="/" className="flex items-center z-50">
-            <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
-              <Image 
-                src="/vr_logo.png" 
-                alt="VR Nails Logo" 
-                fill 
-                className="object-contain mix-blend-screen"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <div className="hidden text-center">
-                <span className="block text-brand-white font-serif text-xl tracking-widest">VR</span>
-              </div>
-            </div>
+        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 md:px-8">
+          <Link href="/" className="flex items-center gap-3" aria-label={`${businessName} home`}>
+            <Image src="/logo.svg" alt="" width={44} height={44} priority />
+            <span className="hidden font-serif text-lg leading-tight text-ivory sm:block">
+              VG <span className="text-gold">Unisex Saloon</span>
+            </span>
           </Link>
 
-          {/* Center: Desktop Links */}
-          <nav className="hidden lg:flex items-center gap-8 text-xs tracking-[0.2em] uppercase">
-            {navLinks.map((link) => (
-              <Link key={link.name} href={link.href} className="relative group overflow-hidden py-2">
-                <span className="text-brand-white group-hover:text-brand-gold transition-colors duration-500">
-                  {link.name}
-                </span>
-                <span className="absolute bottom-0 left-0 w-full h-[1px] bg-brand-gold -translate-x-[101%] group-hover:translate-x-0 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" />
+          <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
+            {NAV_LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={cx(
+                  "text-xs uppercase tracking-[0.18em] transition-colors hover:text-gold",
+                  pathname.startsWith(l.href) ? "text-gold" : "text-ivory/90",
+                )}
+              >
+                {l.name}
               </Link>
             ))}
           </nav>
 
-          {/* Right: Icons */}
-          <div className="flex items-center gap-5 md:gap-6 z-50">
-
-            
-            <Link href="/wishlist" className="relative text-brand-white hover:text-brand-gold transition-colors duration-500">
-              <Heart size={20} strokeWidth={1.5} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-brand-gold text-brand-black text-[9px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link href={accountHref} className="hidden items-center gap-2 text-xs uppercase tracking-[0.15em] text-ivory/90 hover:text-gold md:flex">
+              <User size={18} aria-hidden /> {accountLabel}
             </Link>
-
-            <Link href="/cart" className="relative text-brand-white hover:text-brand-gold transition-colors duration-500">
-              <ShoppingBag size={20} strokeWidth={1.5} />
-              {cartItemCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-brand-gold text-brand-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                  {cartItemCount}
-                </span>
-              )}
+            <Link href="/book" className="inline-flex items-center gap-2 rounded-md bg-gold px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal hover:bg-[#d2b47f]">
+              <CalendarDays size={16} aria-hidden /> <span className="hidden sm:inline">Book now</span>
+              <span className="sm:hidden">Book</span>
             </Link>
-
-            <button 
-              onClick={() => setIsAuthModalOpen(true)}
-              className="hidden md:block text-brand-white hover:text-brand-gold transition-colors duration-500"
-            >
-              <User size={20} strokeWidth={1.5} />
-            </button>
-
-            {/* Mobile Menu Button */}
             <button
-              className="lg:hidden text-brand-white hover:text-brand-gold transition-colors relative w-6 h-6 flex items-center justify-center"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              type="button"
+              className="rounded-md p-2 text-ivory hover:bg-ivory/10 lg:hidden"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-controls="mobile-menu"
+              aria-label={open ? "Close menu" : "Open menu"}
             >
-              {isMobileMenuOpen ? (
-                <X size={24} strokeWidth={1.5} />
-              ) : (
-                <Menu size={24} strokeWidth={1.5} />
-              )}
+              {open ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      {/* Full Screen Mobile Menu Overlay */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 bg-brand-black z-40 lg:hidden flex flex-col items-center justify-center"
-          >
-            <div className="flex flex-col items-center justify-center gap-8 w-full px-6">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + (i * 0.1), duration: 0.5 }}
-                >
-                  <Link 
-                    href={link.href} 
-                    className="font-serif text-3xl md:text-4xl text-brand-white hover:text-brand-gold transition-colors italic block"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                </motion.div>
-              ))}
-
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
-                className="flex justify-center gap-8 mt-12 pt-12 border-t border-brand-white/10 w-3/4"
-              >
-
-                <button 
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsAuthModalOpen(true);
-                  }} 
-                  className="text-brand-white/50 hover:text-brand-gold flex flex-col items-center gap-2"
-                >
-                  <User size={24} strokeWidth={1} />
-                  <span className="text-[10px] uppercase tracking-widest">Sign In</span>
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {open && (
+        <div id="mobile-menu" className="fixed inset-0 z-30 flex flex-col bg-charcoal px-6 pb-10 pt-28 lg:hidden">
+          <nav className="flex flex-col gap-1" aria-label="Mobile">
+            {[{ name: "Home", href: "/" }, ...NAV_LINKS, { name: "Manage a booking", href: "/booking/manage" }].map((l) => (
+              <Link key={l.href} href={l.href} className="border-b border-ivory/10 py-4 font-serif text-2xl text-ivory hover:text-gold">
+                {l.name}
+              </Link>
+            ))}
+          </nav>
+          <div className="mt-auto flex flex-col gap-3">
+            <Link href={accountHref} className="rounded-md border border-ivory/30 py-3 text-center text-sm uppercase tracking-widest text-ivory">
+              {accountLabel}
+            </Link>
+            <Link href="/book" className="rounded-md bg-gold py-3 text-center text-sm font-semibold uppercase tracking-widest text-charcoal">
+              Book an appointment
+            </Link>
+          </div>
+        </div>
+      )}
     </>
   );
 }

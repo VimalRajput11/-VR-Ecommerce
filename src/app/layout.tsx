@@ -1,10 +1,8 @@
-﻿import type { Metadata } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { ShopProvider } from "@/context/ShopContext";
-import AuthModal from "@/components/AuthModal";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import { AuthProvider } from "@/context/AuthContext";
+import { ToastProvider } from "@/context/ToastContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -16,31 +14,38 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "VR Nails | Luxury Handmade Press-On Nails",
-  description: "Crafted for Every Mood, Designed for Every Occasion. Premium handmade press-on nails for the modern elegant woman.",
-  icons: {
-    icon: '/favicon.png?v=2',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "VG Unisex Saloon | Hair, Grooming & Beauty in Old Rajendra Nagar, Delhi",
+    template: "%s | VG Unisex Saloon",
   },
+  description:
+    "VG Unisex Saloon in Bade Bazar, Old Rajendra Nagar, Delhi — haircuts, colour, men's grooming, skin care, nail care and occasion makeup. Book your appointment online.",
+  applicationName: "VG Unisex Saloon",
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    siteName: "VG Unisex Saloon",
+    title: "VG Unisex Saloon — Your Style, Your Confidence.",
+    description: "Premium unisex salon for hair, grooming, skin, nails and makeup in Old Rajendra Nagar, Delhi.",
+  },
+  twitter: { card: "summary_large_image", title: "VG Unisex Saloon", description: "Your Style, Your Confidence." },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  themeColor: "#1b1a18",
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${inter.variable} ${playfair.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col font-sans bg-brand-black text-brand-white">
-        <ShopProvider>
-          <Navbar />
-          {children}
-          <Footer />
-          <AuthModal />
-        </ShopProvider>
+    <html lang="en-IN" className={`${inter.variable} ${playfair.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col bg-ivory font-sans text-charcoal">
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
       </body>
     </html>
   );
