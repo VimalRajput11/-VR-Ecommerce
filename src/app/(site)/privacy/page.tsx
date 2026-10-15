@@ -26,6 +26,7 @@ export default async function PrivacyPage() {
           <li>Billing records: invoices, payments and refunds. We never store card numbers, CVV, UPI PINs or banking passwords; online payments are processed by our payment provider.</li>
           <li>Account details if you register: a securely hashed password and your notification preferences.</li>
           <li>Service preferences and notes recorded by our team to provide consistent service.</li>
+          <li>Job applications sent from our Careers page: your contact details, experience, skills and any link you share. These are used only for hiring and are deleted on request.</li>
         </ul>
         <h2>How we use it</h2>
         <ul>

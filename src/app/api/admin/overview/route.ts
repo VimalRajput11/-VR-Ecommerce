@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { api, json } from "@/server/lib/http";
 import { dateKey } from "@/server/lib/validate";
 import { requirePermission } from "@/server/auth/session";
-import { Appointment, ContactMessage, Review, Service, type AppointmentDoc } from "@/server/models";
+import { Appointment, ContactMessage, JobApplication, Review, Service, type AppointmentDoc } from "@/server/models";
 import { addDaysToKey, dateKeyIST, istToUtc } from "@/lib/time";
 import { serialiseForStaff, staffNameMap } from "@/server/services/booking";
 import {
@@ -51,7 +51,7 @@ export const GET = api(async (req) => {
   };
 
   if (seeAll) {
-    const [pendingRequests, pendingConfirm, newMessages, pendingReviews, unverifiedPrices, popular, workload] = await Promise.all([
+    const [pendingRequests, pendingConfirm, newMessages, pendingReviews, unverifiedPrices, popular, workload, newApplications] = await Promise.all([
       Appointment.countDocuments({ "request.type": { $exists: true }, "request.resolved": false, status: { $in: ["pending", "confirmed"] } }),
       Appointment.countDocuments({ status: "pending", start: { $gte: new Date() } }),
       user.permissions.includes("messages.view") ? ContactMessage.countDocuments({ status: "new" }) : 0,
@@ -59,8 +59,9 @@ export const GET = api(async (req) => {
       user.permissions.includes("services.manage") ? Service.countDocuments({ archived: { $ne: true }, active: true, priceVerified: false }) : 0,
       popularServices(range),
       staffWorkload(range),
+      user.permissions.includes("careers.manage") ? JobApplication.countDocuments({ status: "new" }) : 0,
     ]);
-    Object.assign(result, { alerts: { pendingRequests, pendingConfirm, newMessages, pendingReviews, unverifiedPrices }, popular, workload });
+    Object.assign(result, { alerts: { pendingRequests, pendingConfirm, newMessages, pendingReviews, unverifiedPrices, newApplications }, popular, workload });
   }
 
   if (user.permissions.includes("reports.view")) {

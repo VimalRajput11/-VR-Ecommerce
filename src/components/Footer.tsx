@@ -28,6 +28,7 @@ export default function Footer({ settings }: { settings: PublicSettings }) {
             <li><Link href="/gallery" className="hover:text-gold">Gallery</Link></li>
             <li><Link href="/reviews" className="hover:text-gold">Reviews</Link></li>
             <li><Link href="/about" className="hover:text-gold">About us</Link></li>
+            <li><Link href="/careers" className="hover:text-gold">Careers</Link></li>
           </ul>
         </div>
 

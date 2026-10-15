@@ -1,5 +1,6 @@
 import { connectDB } from "@/server/db";
-import { Coupon, GalleryImage, Review, Service, ServiceCategory, type ServiceDoc } from "@/server/models";
+import { Coupon, GalleryImage, JobOpening, Review, Service, ServiceCategory, type JobOpeningDoc, type ServiceDoc } from "@/server/models";
+import { serialiseOpening } from "@/server/services/careers";
 import { CATEGORY_IMAGES } from "@/lib/images";
 
 // Read-only queries used by public pages (server components) and public APIs.
@@ -120,4 +121,10 @@ export async function getPublicOffers() {
       endsAt: c.endsAt,
       firstVisitOnly: c.firstVisitOnly,
     }));
+}
+
+export async function getOpenJobs() {
+  await connectDB();
+  const jobs = await JobOpening.find({ active: true, archived: { $ne: true } }).sort({ order: 1, createdAt: -1 }).lean<JobOpeningDoc[]>();
+  return jobs.map(serialiseOpening);
 }

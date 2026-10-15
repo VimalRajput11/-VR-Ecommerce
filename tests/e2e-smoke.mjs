@@ -43,7 +43,7 @@ const phone = `98${stamp}12`.slice(0, 10);
 let services, booked, aliceAppt, invoiceId;
 
 await step("public pages render with new branding", async () => {
-  for (const p of ["/", "/services", "/offers", "/gallery", "/reviews", "/about", "/contact", "/faq", "/policies", "/privacy", "/terms", "/book", "/booking/manage", "/login", "/register"]) {
+  for (const p of ["/", "/careers", "/services", "/offers", "/gallery", "/reviews", "/about", "/contact", "/faq", "/policies", "/privacy", "/terms", "/book", "/booking/manage", "/login", "/register"]) {
     const r = await guest.req(p);
     assert.equal(r.status, 200, `${p} -> ${r.status}`);
     assert.ok(r.data.includes("VG Unisex Saloon"), `${p} missing brand`);
@@ -210,6 +210,30 @@ if (OWNER_EMAIL && OWNER_PASSWORD) {
     // Deactivate again so the test account cannot be used.
     await owner.req(`/api/admin/staff/${r.data.staff.id}`, { method: "PATCH", body: { active: false } });
     assert.equal((await rita.req("/api/admin/appointments")).status, 401);
+  });
+
+  await step("careers: owner posts a job, public applies, owner reviews; others are blocked", async () => {
+    const job = await owner.req("/api/admin/careers", { method: "POST", body: { title: `Smoke Stylist ${stamp}`, type: "full_time", experience: "2+ years" } });
+    assert.equal(job.status, 201, JSON.stringify(job.data));
+    const page = await guest.req("/careers");
+    assert.ok(page.data.includes(`Smoke Stylist ${stamp}`), "open job not listed on /careers");
+    const noConsent = await guest.req("/api/careers/apply", { method: "POST", body: { openingId: job.data.opening.id, name: "Applicant", phone: "9822222222" } });
+    assert.equal(noConsent.status, 400);
+    const badLink = await guest.req("/api/careers/apply", { method: "POST", body: { openingId: job.data.opening.id, name: "Applicant", phone: "9822222222", consent: true, portfolioUrl: "javascript:alert(1)" } });
+    assert.equal(badLink.status, 400);
+    const apply = await guest.req("/api/careers/apply", { method: "POST", body: { openingId: job.data.opening.id, name: "Smoke Applicant", phone: "9822222222", experienceYears: 3, portfolioUrl: "instagram.com/example", consent: true } });
+    assert.equal(apply.status, 201, JSON.stringify(apply.data));
+    const list = await owner.req(`/api/admin/careers/applications?opening=${job.data.opening.id}`);
+    assert.equal(list.data.items.length, 1);
+    assert.equal(list.data.items[0].portfolioUrl, "https://instagram.com/example");
+    const upd = await owner.req(`/api/admin/careers/applications/${list.data.items[0].id}`, { method: "PATCH", body: { status: "shortlisted", notes: "call Monday" } });
+    assert.equal(upd.data.application.status, "shortlisted");
+    assert.equal((await alice.req("/api/admin/careers/applications")).status, 403);
+    assert.equal((await guest.req("/api/admin/careers")).status, 401);
+    await owner.req(`/api/admin/careers/applications/${list.data.items[0].id}`, { method: "DELETE" });
+    await owner.req(`/api/admin/careers/${job.data.opening.id}`, { method: "DELETE" });
+    const after = await guest.req("/careers");
+    assert.ok(!after.data.includes(`Smoke Stylist ${stamp}`), "archived job still listed");
   });
 
   await step("customer can cancel their own booking outside the cut-off", async () => {

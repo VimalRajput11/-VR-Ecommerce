@@ -30,7 +30,7 @@ interface Overview {
   today: { stats: { total: number; byStatus: Record<string, number>; walkIns: number }; appointments: StaffAppointment[] };
   upcomingCount: number;
   rangeStats: { total: number; byStatus: Record<string, number>; walkIns: number; completionRate: number; cancellationRate: number; noShowRate: number };
-  alerts?: { pendingRequests: number; pendingConfirm: number; newMessages: number; pendingReviews: number; unverifiedPrices: number };
+  alerts?: { pendingRequests: number; pendingConfirm: number; newMessages: number; pendingReviews: number; unverifiedPrices: number; newApplications: number };
   popular?: { name: string; count: number }[];
   workload?: { staffId: string; name: string; appointments: number; minutes: number; completed: number }[];
   sales?: { today: Sales; month: Sales; range: Sales; outstanding: { amount: number; count: number }; series: { date: string; billed: number; collected: number }[] };
@@ -87,6 +87,11 @@ export default function OverviewPage() {
               {data.alerts.newMessages > 0 && (
                 <Link href="/dashboard/messages" className="rounded-full bg-cream px-3 py-1 text-xs text-charcoal">
                   {data.alerts.newMessages} new messages
+                </Link>
+              )}
+              {data.alerts.newApplications > 0 && (
+                <Link href="/dashboard/careers" className="rounded-full bg-cream px-3 py-1 text-xs text-charcoal">
+                  {data.alerts.newApplications} new job application{data.alerts.newApplications === 1 ? "" : "s"}
                 </Link>
               )}
               {data.alerts.pendingReviews > 0 && (

@@ -26,6 +26,7 @@ export const PERMISSIONS = [
   "reviews.moderate",
   "gallery.manage",
   "messages.view",
+  "careers.manage", // job openings & applications
   "audit.view",
 ] as const;
 
@@ -60,6 +61,7 @@ export const GRANTABLE_PERMISSIONS: Permission[] = [
   "reports.view",
   "reviews.moderate",
   "gallery.manage",
+  "careers.manage",
 ];
 
 export const PERMISSION_LABELS: Partial<Record<Permission, string>> = {
@@ -74,6 +76,7 @@ export const PERMISSION_LABELS: Partial<Record<Permission, string>> = {
   "reports.view": "View reports",
   "reviews.moderate": "Moderate reviews",
   "gallery.manage": "Manage gallery",
+  "careers.manage": "Hiring & job applications",
 };
 
 export function permissionsFor(role: Role, extra: string[] = []): Permission[] {
