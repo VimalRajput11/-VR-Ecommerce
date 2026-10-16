@@ -21,7 +21,7 @@ export default function HomeHero({ name, locality, city }: { name: string; local
     <section className="relative isolate flex min-h-[100svh] items-center overflow-hidden bg-charcoal px-4 pb-24 pt-32 md:px-8">
       {/* Slow cinematic zoom on the background photo */}
       <div className="absolute inset-0 -z-20 animate-kenburns">
-        <SafeImage src={IMAGES.heroInterior} alt="" fill priority sizes="100vw" className="object-cover opacity-40" />
+        <SafeImage src={IMAGES.mensSalon} alt="" fill priority sizes="100vw" className="object-cover opacity-40" />
       </div>
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal via-charcoal/85 to-charcoal/40" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-charcoal via-transparent to-charcoal/30" />
@@ -90,7 +90,7 @@ export default function HomeHero({ name, locality, city }: { name: string; local
         >
           <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-t-full border border-gold/50" aria-hidden />
           <div className="relative h-full overflow-hidden rounded-t-full shadow-2xl">
-            <SafeImage src={IMAGES.blowDry} alt="Stylist blow-drying a client's hair" fill sizes="420px" className="object-cover" priority />
+            <SafeImage src={IMAGES.bridalHair} alt="Stylist finishing a bridal hairstyle" fill sizes="420px" className="object-cover" priority />
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent" />
           </div>
 

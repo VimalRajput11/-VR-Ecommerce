@@ -17,13 +17,13 @@ export default async function AboutPage() {
   const s = await getSiteSettings();
   return (
     <>
-      <PageHero image={IMAGES.salonBright} eyebrow="About us" title={`Welcome to ${s.name}`}>
+      <PageHero image={IMAGES.bridalHair} eyebrow="About us" title={`Welcome to ${s.name}`}>
         A unisex salon in {s.address.locality}, {s.address.city}, owned and run by {s.ownerName}.
       </PageHero>
       <Section>
         <div className="grid items-center gap-12 md:grid-cols-2">
           <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-cream">
-            <SafeImage src={IMAGES.salonBright} alt="Bright, modern salon interior" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+            <SafeImage src={IMAGES.hairBrushing} alt="Stylist brushing a smiling client's hair" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
           </div>
           <div>
             <SectionHeading eyebrow="Our story" title="Style and care for everyone" />

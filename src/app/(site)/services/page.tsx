@@ -16,7 +16,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   const catalog = await safeLoad(getPublicCatalog, { categories: [], services: [] });
   return (
     <>
-      <PageHero image={IMAGES.barberShop} eyebrow="Services & prices" title="Our service menu">
+      <PageHero image={IMAGES.mensSalon} eyebrow="Services & prices" title="Our service menu">
         Browse every service with its duration and price. Prices marked &ldquo;price at salon&rdquo; are confirmed after a quick consultation.
       </PageHero>
       <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">

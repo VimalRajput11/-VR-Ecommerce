@@ -15,7 +15,7 @@ export default async function PoliciesPage() {
   const b = s.booking;
   return (
     <>
-      <PageHero image={IMAGES.hairWash2} eyebrow="Policies" title="Booking & cancellation policy" />
+      <PageHero image={IMAGES.mehndi} eyebrow="Policies" title="Booking & cancellation policy" />
       <Prose>
         <h2>Booking</h2>
         {s.policies?.booking ? (

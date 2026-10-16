@@ -38,13 +38,13 @@ export function SectionHeading({ eyebrow, title, children, align = "left", dark 
 }
 
 /** Banner at the top of inner pages: photo background, gradient and animated entrance. */
-export function PageHero({ eyebrow, title, children, image = IMAGES.salonDark }: { eyebrow?: string; title: ReactNode; children?: ReactNode; image?: string }) {
+export function PageHero({ eyebrow, title, children, image = IMAGES.mensSalon }: { eyebrow?: string; title: ReactNode; children?: ReactNode; image?: string }) {
   return (
     <div className="relative isolate overflow-hidden bg-charcoal px-4 pb-16 pt-16 text-ivory md:px-8 md:pb-24 md:pt-24">
       <div className="absolute inset-0 -z-20 animate-kenburns">
-        <SafeImage src={image} alt="" fill priority sizes="100vw" className="object-cover opacity-35" />
+        <SafeImage src={image} alt="" fill priority sizes="100vw" className="object-cover object-[70%_30%] opacity-60" />
       </div>
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal via-charcoal/85 to-charcoal/50" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal via-charcoal/80 to-charcoal/10" />
       <div className="pointer-events-none absolute -right-32 -top-24 -z-10 h-[380px] w-[380px] rounded-full bg-gold/15 blur-[100px]" aria-hidden />
       <Reveal className="mx-auto max-w-7xl" y={20}>
         {eyebrow && (

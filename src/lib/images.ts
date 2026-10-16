@@ -1,43 +1,41 @@
-// Licensed Unsplash photography used for decorative/brand imagery only. These are not
-// presented as the salon's own work; the Gallery page shows owner-uploaded images.
+// Decorative/brand imagery featuring Indian clients and stylists. Photos are from Unsplash
+// (free under the Unsplash License) and are stored in /public/images so the site doesn't depend
+// on Unsplash being fast or available. They are not presented as the salon's own work; the
+// Gallery page shows owner-uploaded images. The Unsplash photo ID is noted for each.
 
-const u = (id: string, w = 1600) =>
-  `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&q=75&w=${w}`;
+const local = (name: string) => `/images/${name}.jpg`;
 
 export const IMAGES = {
-  heroInterior: u("1560066984-138dadb4c035", 2000),
-  salonBright: u("1633681926022-84c23e8cb2d6"),
-  salonDark: u("1600948836101-f9ffda59d250"),
-  salonWhite: u("1521590832167-7bcbfaa6381f"),
-  barberShop: u("1585747860715-2ba37e788b70"),
-  blowDry: u("1562322140-8baeececf3df"),
-  blowDry2: u("1580618672591-eb180b1a973f"),
-  hairWash: u("1595476108010-b4d1f102b1b1"),
-  hairWash2: u("1634449571010-02389ed0f9b0"),
-  mensCut: u("1622286342621-4bd786c2447c"),
-  mensBlowDry: u("1605497788044-5a32c7078486"),
-  beard: u("1599351431202-1e0f0137899a"),
-  shave: u("1503951914875-452162b0f3f1"),
-  facial: u("1570172619644-dfd03ed5d881"),
-  facialMask: u("1616394584738-fc6e612e71b9"),
-  makeup: u("1487412947147-5cebf100ffc2"),
-  makeupKit: u("1512496015851-a90fb38ba796"),
-  manicure: u("1457972729786-0411a3b2b626"),
-  pedicure: u("1519415510236-718bdfcd89c8"),
-  nails: u("1604654894610-df63bc536371"),
-  hairTools: u("1527799820374-dcf8d9d4a388"),
-  stylists: u("1559599101-f09722fb4948"),
-  curls: u("1519699047748-de8e457a634e"),
+  // Hair
+  bridalHair: local("bridalHair"), // stylist finishing a bridal updo — unsplash 1672788725446-c303ec2b318e
+  bridalHairBack: local("bridalHairBack"), // bride's styled hair, green lehenga — unsplash 1743144580426-970faf79f1d9
+  hairBrushing: local("hairBrushing"), // stylist brushing a smiling client's hair — unsplash 1636342686573-2dd5b47d5ff0
+  updo: local("updo"), // hands pinning an updo — unsplash 1709136331829-033933e1913d
+  // Men's grooming
+  mensSalon: local("mensSalon"), // barber cutting hair in a modern salon — unsplash 1593702282967-96c9f195befa
+  mensCut: local("mensCut"), // barber styling a client's hair — unsplash 1635273051368-de31ef6a8cc4
+  beard: local("beard"), // beard trim — unsplash 1659355751282-5ca7807af9e9
+  // Skin & beauty
+  facialWoman: local("facialWoman"), // woman receiving a facial — unsplash 1731355771317-b2ab72c79124
+  facialMan: local("facialMan"), // man with a facial mask — unsplash 1728949202477-bad2935775cb
+  // Makeup & bridal
+  makeupArtist: local("makeupArtist"), // makeup artist doing bridal makeup (Kolkata) — unsplash 1638628064365-f08ad0ec8245
+  bride: local("bride"), // bride in red with gold jewellery — unsplash 1600685890506-593fdf55949b
+  brideSmile: local("brideSmile"), // smiling woman in traditional jewellery — unsplash 1756483560049-e7b2208f99a0
+  // Nails & mehndi
+  manicure: local("manicure"), // pink manicure with mehndi — unsplash 1598111252257-b1f02878dd4b
+  mehndi: local("mehndi"), // bridal mehndi with gold bangles — unsplash 1762162089047-97e09435984d
+  henna: local("henna"), // henna-painted hands — unsplash 1676134358843-da10f130ad04
 } as const;
 
 /** Representative image for a service category slug. */
 export const CATEGORY_IMAGES: Record<string, string> = {
-  "hair-services": IMAGES.blowDry,
+  "hair-services": IMAGES.bridalHair,
   "mens-grooming": IMAGES.beard,
-  "skin-beauty": IMAGES.facial,
+  "skin-beauty": IMAGES.facialWoman,
   "nail-care": IMAGES.manicure,
-  "makeup-occasions": IMAGES.makeup,
-  packages: IMAGES.salonBright,
+  "makeup-occasions": IMAGES.makeupArtist,
+  packages: IMAGES.bride,
 };
 
-export const FALLBACK_IMAGE = IMAGES.salonWhite;
+export const FALLBACK_IMAGE = IMAGES.hairBrushing;

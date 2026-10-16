@@ -18,7 +18,7 @@ export default async function GalleryPage() {
   const images = await safeLoad(() => getGallery(200), []);
   return (
     <>
-      <PageHero image={IMAGES.curls} eyebrow="Gallery" title="Styles from our salon">
+      <PageHero image={IMAGES.bridalHairBack} eyebrow="Gallery" title="Styles from our salon">
         Haircuts and hairstyles, colour, men&apos;s grooming, skin and beauty, makeup and nail care.
       </PageHero>
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">

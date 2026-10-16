@@ -14,7 +14,7 @@ export default async function ContactPage() {
   const settings = await getSiteSettings();
   return (
     <>
-      <PageHero image={IMAGES.salonWhite} eyebrow="Contact" title="We'd love to hear from you">
+      <PageHero image={IMAGES.makeupArtist} eyebrow="Contact" title="We'd love to hear from you">
         Questions about a service, a bridal booking or anything else? Send us a message and we&apos;ll reply as soon as we can.
       </PageHero>
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-14 md:px-8 lg:grid-cols-[1fr_1.1fr]">

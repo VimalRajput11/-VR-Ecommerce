@@ -19,7 +19,7 @@ export default async function OffersPage() {
   const packages = catalog.services.filter((s) => s.kind === "package");
   return (
     <>
-      <PageHero image={IMAGES.makeupKit} eyebrow="Offers & packages" title="More value, every visit">
+      <PageHero image={IMAGES.brideSmile} eyebrow="Offers & packages" title="More value, every visit">
         Seasonal offers and combined packages. Offer codes are applied at billing in the salon.
       </PageHero>
       <Section>

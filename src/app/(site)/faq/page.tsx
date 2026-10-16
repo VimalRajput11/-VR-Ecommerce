@@ -39,7 +39,7 @@ export default async function FaqPage() {
   ];
   return (
     <>
-      <PageHero image={IMAGES.hairTools} eyebrow="Help" title="Frequently asked questions" />
+      <PageHero image={IMAGES.updo} eyebrow="Help" title="Frequently asked questions" />
       <div className="mx-auto max-w-3xl px-4 py-12 md:px-8">
         <div className="divide-y divide-beige rounded-lg border border-beige bg-white">
           {faqs.map((f) => (

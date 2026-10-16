@@ -14,7 +14,7 @@ export default async function TermsPage() {
   const s = await getSiteSettings();
   return (
     <>
-      <PageHero image={IMAGES.salonWhite} eyebrow="Legal" title="Terms & conditions" />
+      <PageHero image={IMAGES.henna} eyebrow="Legal" title="Terms & conditions" />
       <Prose>
         <p>
           These terms apply to the use of this website and to services provided by {s.name}, {s.address.locality}, {s.address.city}. The owner should review these terms with a legal adviser

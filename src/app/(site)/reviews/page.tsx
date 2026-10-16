@@ -17,7 +17,7 @@ export default async function ReviewsPage() {
   const data = await safeLoad(() => getApprovedReviews(100), { reviews: [], average: null, count: 0 });
   return (
     <>
-      <PageHero image={IMAGES.facial} eyebrow="Reviews" title="Client reviews">
+      <PageHero image={IMAGES.facialWoman} eyebrow="Reviews" title="Client reviews">
         Every review here was left by a client after a completed appointment and checked by our team before publishing.
       </PageHero>
       <div className="mx-auto max-w-5xl px-4 py-12 md:px-8">

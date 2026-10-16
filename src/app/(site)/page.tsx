@@ -31,14 +31,15 @@ export default async function HomePage() {
   const packages = catalog.services.filter((s) => s.kind === "package").slice(0, 3);
 
   const inspiration = [
-    { src: IMAGES.mensCut, alt: "Barber finishing a men's haircut" },
-    { src: IMAGES.blowDry2, alt: "Stylist blow-drying a client's hair" },
-    { src: IMAGES.beard, alt: "Beard grooming with clippers" },
-    { src: IMAGES.facial, alt: "Client relaxing during a facial" },
-    { src: IMAGES.makeup, alt: "Close-up of occasion eye makeup" },
-    { src: IMAGES.manicure, alt: "Manicure in progress" },
-    { src: IMAGES.curls, alt: "Natural curls styled and defined" },
-    { src: IMAGES.hairWash, alt: "Relaxing hair wash at the basin" },
+    // Order matters for the desktop mosaic: tiles 0 and 3 are tall, 6 and 7 are wide.
+    { src: IMAGES.bride, alt: "Bride in red with gold jewellery and bridal makeup" },
+    { src: IMAGES.beard, alt: "Barber trimming and shaping a client's beard" },
+    { src: IMAGES.makeupArtist, alt: "Makeup artist applying bridal eye makeup" },
+    { src: IMAGES.bridalHairBack, alt: "Bride's styled hair with floral accessories" },
+    { src: IMAGES.mehndi, alt: "Bridal mehndi with gold bangles" },
+    { src: IMAGES.henna, alt: "Hands decorated with fresh henna" },
+    { src: IMAGES.facialMan, alt: "Man relaxing with a facial mask" },
+    { src: IMAGES.manicure, alt: "Pink manicure on mehndi-painted hands" },
   ];
   const galleryItems = (gallery.length ? gallery.map((g) => ({ src: g.url, alt: g.alt })) : inspiration).slice(0, 8);
 
@@ -125,12 +126,12 @@ export default async function HomePage() {
         <div className="grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr]">
           <Reveal className="relative mx-auto w-full max-w-md lg:max-w-none">
             <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-              <SafeImage src={IMAGES.mensBlowDry} alt="Stylist styling a client's hair" fill sizes="(max-width: 1024px) 90vw, 40vw" className="object-cover" />
+              <SafeImage src={IMAGES.mensCut} alt="Barber styling a client's haircut" fill sizes="(max-width: 1024px) 90vw, 40vw" className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 to-transparent" />
             </div>
             <div className="absolute -bottom-6 -right-4 hidden w-44 overflow-hidden rounded-xl border-4 border-charcoal shadow-2xl sm:block">
               <div className="relative aspect-square">
-                <SafeImage src={IMAGES.facialMask} alt="Client enjoying a facial treatment" fill sizes="176px" className="object-cover" />
+                <SafeImage src={IMAGES.facialWoman} alt="Client enjoying a facial treatment" fill sizes="176px" className="object-cover" />
               </div>
             </div>
             <div className="absolute -left-4 top-8 animate-float rounded-xl bg-gold px-5 py-4 text-charcoal shadow-xl">

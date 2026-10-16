@@ -14,7 +14,7 @@ export default async function PrivacyPage() {
   const s = await getSiteSettings();
   return (
     <>
-      <PageHero image={IMAGES.salonWhite} eyebrow="Legal" title="Privacy policy" />
+      <PageHero image={IMAGES.henna} eyebrow="Legal" title="Privacy policy" />
       <Prose>
         <p>
           This policy explains how {s.name} (&ldquo;we&rdquo;, &ldquo;us&rdquo;), {s.address.locality}, {s.address.city}, handles personal information collected through this website and at the salon. It is

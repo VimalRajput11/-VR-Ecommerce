@@ -8,7 +8,7 @@ import { IMAGES } from "@/lib/images";
 export default function CtaBand({
   title = "Ready for a fresh look?",
   text = "Book online in under a minute — choose your service, your stylist and a time that suits you.",
-  image = IMAGES.salonDark,
+  image = IMAGES.bride,
 }: {
   title?: string;
   text?: string;

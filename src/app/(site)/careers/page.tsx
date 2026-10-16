@@ -18,7 +18,7 @@ export default async function CareersPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHero image={IMAGES.stylists} eyebrow="Careers" title="Grow your craft with us">
+      <PageHero image={IMAGES.mensCut} eyebrow="Careers" title="Grow your craft with us">
         {settings.name} is a unisex salon in {settings.address.locality}, {settings.address.city}. We&apos;re always happy to hear from skilled, friendly people who
         love hair, grooming and beauty.
       </PageHero>
