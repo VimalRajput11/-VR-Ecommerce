@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { name: "Gallery", href: "/gallery" },
   { name: "Reviews", href: "/reviews" },
   { name: "About", href: "/about" },
+  { name: "Careers", href: "/careers" },
   { name: "Contact", href: "/contact" },
 ];
 
@@ -62,12 +63,12 @@ export default function Navbar({ businessName, announcement }: { businessName: s
         <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label={`${businessName} home`}>
             <Image src="/logo.svg" alt="" width={44} height={44} priority />
-            <span className="hidden font-serif text-lg leading-tight text-ivory sm:block">
+            <span className="hidden whitespace-nowrap font-serif text-lg leading-tight text-ivory sm:block lg:hidden xl:block">
               VG <span className="text-gold">Unisex Saloon</span>
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
+          <nav className="hidden items-center gap-5 lg:flex xl:gap-7" aria-label="Main">
             {NAV_LINKS.map((l) => (
               <Link
                 key={l.href}
@@ -84,9 +85,9 @@ export default function Navbar({ businessName, announcement }: { businessName: s
 
           <div className="flex items-center gap-2 md:gap-4">
             <Link href={accountHref} className="hidden items-center gap-2 text-xs uppercase tracking-[0.15em] text-ivory/90 hover:text-gold md:flex">
-              <User size={18} aria-hidden /> {accountLabel}
+              <User size={18} aria-hidden /> <span className="whitespace-nowrap lg:sr-only xl:not-sr-only">{accountLabel}</span>
             </Link>
-            <Link href="/book" className="inline-flex items-center gap-2 rounded-md bg-gold px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal hover:bg-[#d2b47f]">
+            <Link href="/book" className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-gold px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-charcoal hover:bg-[#d2b47f]">
               <CalendarDays size={16} aria-hidden /> <span className="hidden sm:inline">Book now</span>
               <span className="sm:hidden">Book</span>
             </Link>
