@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
   turbopack: { root: process.cwd() },
   images: {
+    // 90 is used for the hero photos so they stay crisp on high-resolution screens.
+    qualities: [75, 90],
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
       // Gallery/service uploads stored in Vercel Blob

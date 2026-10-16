@@ -8,6 +8,7 @@ const local = (name: string) => `/images/${name}.jpg`;
 export const IMAGES = {
   // Hair
   bridalHair: local("bridalHair"), // stylist finishing a bridal updo — unsplash 1672788725446-c303ec2b318e
+  heroPortrait: local("heroPortrait"), // portrait crop of bridalHair for the home hero arch (1200x1600)
   bridalHairBack: local("bridalHairBack"), // bride's styled hair, green lehenga — unsplash 1743144580426-970faf79f1d9
   hairBrushing: local("hairBrushing"), // stylist brushing a smiling client's hair — unsplash 1636342686573-2dd5b47d5ff0
   updo: local("updo"), // hands pinning an updo — unsplash 1709136331829-033933e1913d

@@ -21,7 +21,7 @@ export default function HomeHero({ name, locality, city }: { name: string; local
     <section className="relative isolate flex min-h-[100svh] items-center overflow-hidden bg-charcoal px-4 pb-24 pt-32 md:px-8">
       {/* Slow cinematic zoom on the background photo */}
       <div className="absolute inset-0 -z-20 animate-kenburns">
-        <SafeImage src={IMAGES.mensSalon} alt="" fill priority sizes="100vw" className="object-cover opacity-40" />
+        <SafeImage src={IMAGES.mensSalon} alt="" fill priority quality={90} sizes="100vw" className="object-cover opacity-40" />
       </div>
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-charcoal via-charcoal/85 to-charcoal/40" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-charcoal via-transparent to-charcoal/30" />
@@ -90,17 +90,17 @@ export default function HomeHero({ name, locality, city }: { name: string; local
         >
           <div className="absolute inset-0 translate-x-5 translate-y-5 rounded-t-full border border-gold/50" aria-hidden />
           <div className="relative h-full overflow-hidden rounded-t-full shadow-2xl">
-            <SafeImage src={IMAGES.bridalHair} alt="Stylist finishing a bridal hairstyle" fill sizes="420px" className="object-cover" priority />
+            <SafeImage src={IMAGES.heroPortrait} alt="Stylist finishing a bridal hairstyle" fill quality={90} sizes="(min-width: 1024px) 420px, 1px" className="object-cover" priority />
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 via-transparent to-transparent" />
           </div>
 
-          <div className="absolute -left-14 top-[18%] animate-float rounded-xl border border-ivory/15 bg-charcoal/70 px-4 py-3 text-ivory shadow-xl backdrop-blur-md">
+          <div className="absolute -left-14 top-[46%] animate-float rounded-xl border border-ivory/15 bg-charcoal/70 px-4 py-3 text-ivory shadow-xl backdrop-blur-md">
             <p className="flex items-center gap-2 text-sm font-medium">
               <Scissors size={16} className="text-gold" aria-hidden /> Precision cuts
             </p>
             <p className="text-xs text-mist">for men, women &amp; kids</p>
           </div>
-          <div className="absolute -right-10 top-[52%] animate-float-slow rounded-xl border border-ivory/15 bg-charcoal/70 px-4 py-3 text-ivory shadow-xl backdrop-blur-md [animation-delay:1.5s]">
+          <div className="absolute -right-10 top-[24%] animate-float-slow rounded-xl border border-ivory/15 bg-charcoal/70 px-4 py-3 text-ivory shadow-xl backdrop-blur-md [animation-delay:1.5s]">
             <p className="flex items-center gap-2 text-sm font-medium">
               <Sparkles size={16} className="text-gold" aria-hidden /> Bridal &amp; party
             </p>
