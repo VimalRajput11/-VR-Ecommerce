@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GalleryGrid from "@/components/site/GalleryGrid";
+import { IMAGES } from "@/lib/images";
+import CtaBand from "@/components/site/CtaBand";
 import { PageHero } from "@/components/site/Section";
 import { getGallery } from "@/server/queries/public";
 import { safeLoad } from "@/server/queries/site";
@@ -16,7 +18,7 @@ export default async function GalleryPage() {
   const images = await safeLoad(() => getGallery(200), []);
   return (
     <>
-      <PageHero eyebrow="Gallery" title="Styles from our salon">
+      <PageHero image={IMAGES.curls} eyebrow="Gallery" title="Styles from our salon">
         Haircuts and hairstyles, colour, men&apos;s grooming, skin and beauty, makeup and nail care.
       </PageHero>
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
@@ -37,6 +39,7 @@ export default async function GalleryPage() {
           </div>
         )}
       </div>
+      <CtaBand />
     </>
   );
 }

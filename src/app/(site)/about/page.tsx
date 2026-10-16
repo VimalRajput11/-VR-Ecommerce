@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SafeImage from "@/components/site/SafeImage";
+import CtaBand from "@/components/site/CtaBand";
 import { PageHero, Section, SectionHeading } from "@/components/site/Section";
 import VisitInfo from "@/components/site/VisitInfo";
 import { getSiteSettings } from "@/server/queries/site";
@@ -16,7 +17,7 @@ export default async function AboutPage() {
   const s = await getSiteSettings();
   return (
     <>
-      <PageHero eyebrow="About us" title={`Welcome to ${s.name}`}>
+      <PageHero image={IMAGES.salonBright} eyebrow="About us" title={`Welcome to ${s.name}`}>
         A unisex salon in {s.address.locality}, {s.address.city}, owned and run by {s.ownerName}.
       </PageHero>
       <Section>
@@ -55,6 +56,7 @@ export default async function AboutPage() {
         <SectionHeading eyebrow="Visit" title="Where to find us" dark />
         <VisitInfo settings={s} dark />
       </Section>
+      <CtaBand />
     </>
   );
 }

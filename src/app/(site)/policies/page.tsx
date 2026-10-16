@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { IMAGES } from "@/lib/images";
 import { PageHero } from "@/components/site/Section";
 import Prose from "@/components/site/Prose";
 import { getSiteSettings } from "@/server/queries/site";
@@ -14,7 +15,7 @@ export default async function PoliciesPage() {
   const b = s.booking;
   return (
     <>
-      <PageHero eyebrow="Policies" title="Booking & cancellation policy" />
+      <PageHero image={IMAGES.hairWash2} eyebrow="Policies" title="Booking & cancellation policy" />
       <Prose>
         <h2>Booking</h2>
         {s.policies?.booking ? (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { ArrowUpRight, Clock } from "lucide-react";
 import SafeImage from "./SafeImage";
 import type { PublicService } from "@/server/queries/public";
 import { formatINR } from "@/lib/money";
@@ -17,7 +17,7 @@ export function PriceTag({ price, priceFrom, className }: { price: number | null
 
 export default function ServiceCard({ service, compact }: { service: PublicService; compact?: boolean }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-lg border border-beige bg-white transition-shadow hover:shadow-lg">
+    <article className="lift group flex h-full flex-col overflow-hidden rounded-xl border border-beige bg-white hover:border-gold/50">
       {!compact && (
         <Link href={`/services/${service.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-cream" tabIndex={-1} aria-hidden>
           <SafeImage
@@ -25,14 +25,18 @@ export default function ServiceCard({ service, compact }: { service: PublicServi
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            className="object-cover transition-transform duration-[1.2s] ease-out group-hover:scale-110"
           />
+          <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/0 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+          <span className="absolute bottom-4 left-4 flex translate-y-3 items-center gap-1 text-xs font-semibold uppercase tracking-wider text-ivory opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
+            View details <ArrowUpRight size={14} />
+          </span>
           {service.kind === "package" && <span className="absolute left-3 top-3 rounded-full bg-charcoal/85 px-3 py-1 text-[11px] uppercase tracking-wider text-gold">Package</span>}
         </Link>
       )}
       <div className="flex flex-1 flex-col p-5">
         <p className="eyebrow mb-1.5 text-gold-deep">{service.categoryName}</p>
-        <h3 className="font-serif text-xl text-charcoal">
+        <h3 className="font-serif text-xl text-charcoal transition-colors group-hover:text-gold-deep">
           <Link href={`/services/${service.slug}`} className="hover:text-gold-deep">
             {service.name}
           </Link>
@@ -48,7 +52,7 @@ export default function ServiceCard({ service, compact }: { service: PublicServi
           {service.onlineBooking ? (
             <Link
               href={`/book?service=${service.id}`}
-              className="rounded-md bg-charcoal px-4 py-2 text-xs font-semibold uppercase tracking-wider text-ivory hover:bg-charcoal-soft"
+              className="shine rounded-md bg-charcoal px-4 py-2 text-xs font-semibold uppercase tracking-wider text-ivory transition-colors group-hover:bg-gold group-hover:text-charcoal"
               aria-label={`Book ${service.name}`}
             >
               Book

@@ -74,8 +74,9 @@ export default function Navbar({ businessName, announcement }: { businessName: s
                 key={l.href}
                 href={l.href}
                 className={cx(
-                  "text-xs uppercase tracking-[0.18em] transition-colors hover:text-gold",
-                  pathname.startsWith(l.href) ? "text-gold" : "text-ivory/90",
+                  "relative py-1 text-xs uppercase tracking-[0.18em] transition-colors hover:text-gold",
+                  "after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:origin-left after:bg-gold after:transition-transform after:duration-500",
+                  pathname.startsWith(l.href) ? "text-gold after:scale-x-100" : "text-ivory/90 after:scale-x-0 hover:after:scale-x-100",
                 )}
               >
                 {l.name}

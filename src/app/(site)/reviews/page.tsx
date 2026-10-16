@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Stars from "@/components/site/Stars";
+import { IMAGES } from "@/lib/images";
 import { PageHero } from "@/components/site/Section";
 import { getApprovedReviews } from "@/server/queries/public";
 import { safeLoad } from "@/server/queries/site";
@@ -16,7 +17,7 @@ export default async function ReviewsPage() {
   const data = await safeLoad(() => getApprovedReviews(100), { reviews: [], average: null, count: 0 });
   return (
     <>
-      <PageHero eyebrow="Reviews" title="Client reviews">
+      <PageHero image={IMAGES.facial} eyebrow="Reviews" title="Client reviews">
         Every review here was left by a client after a completed appointment and checked by our team before publishing.
       </PageHero>
       <div className="mx-auto max-w-5xl px-4 py-12 md:px-8">

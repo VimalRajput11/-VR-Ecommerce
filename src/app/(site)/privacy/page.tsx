@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { IMAGES } from "@/lib/images";
 import { PageHero } from "@/components/site/Section";
 import Prose from "@/components/site/Prose";
 import { getSiteSettings } from "@/server/queries/site";
@@ -13,7 +14,7 @@ export default async function PrivacyPage() {
   const s = await getSiteSettings();
   return (
     <>
-      <PageHero eyebrow="Legal" title="Privacy policy" />
+      <PageHero image={IMAGES.salonWhite} eyebrow="Legal" title="Privacy policy" />
       <Prose>
         <p>
           This policy explains how {s.name} (&ldquo;we&rdquo;, &ldquo;us&rdquo;), {s.address.locality}, {s.address.city}, handles personal information collected through this website and at the salon. It is

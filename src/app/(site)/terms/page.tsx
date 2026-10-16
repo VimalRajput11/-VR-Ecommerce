@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { IMAGES } from "@/lib/images";
 import { PageHero } from "@/components/site/Section";
 import Prose from "@/components/site/Prose";
 import { getSiteSettings } from "@/server/queries/site";
@@ -13,7 +14,7 @@ export default async function TermsPage() {
   const s = await getSiteSettings();
   return (
     <>
-      <PageHero eyebrow="Legal" title="Terms & conditions" />
+      <PageHero image={IMAGES.salonWhite} eyebrow="Legal" title="Terms & conditions" />
       <Prose>
         <p>
           These terms apply to the use of this website and to services provided by {s.name}, {s.address.locality}, {s.address.city}. The owner should review these terms with a legal adviser

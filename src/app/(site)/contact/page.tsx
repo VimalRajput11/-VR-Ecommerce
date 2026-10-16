@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/site/ContactForm";
 import VisitInfo from "@/components/site/VisitInfo";
+import { IMAGES } from "@/lib/images";
 import { PageHero } from "@/components/site/Section";
 import { getSiteSettings } from "@/server/queries/site";
 
@@ -13,7 +14,7 @@ export default async function ContactPage() {
   const settings = await getSiteSettings();
   return (
     <>
-      <PageHero eyebrow="Contact" title="We'd love to hear from you">
+      <PageHero image={IMAGES.salonWhite} eyebrow="Contact" title="We'd love to hear from you">
         Questions about a service, a bridal booking or anything else? Send us a message and we&apos;ll reply as soon as we can.
       </PageHero>
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-14 md:px-8 lg:grid-cols-[1fr_1.1fr]">

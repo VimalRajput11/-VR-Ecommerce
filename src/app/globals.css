@@ -25,6 +25,35 @@
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-playfair), ui-serif, Georgia, serif;
+
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-kenburns: kenburns 18s ease-out both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 8s ease-in-out infinite;
+  --animate-shimmer: shimmer 6s linear infinite;
+  --animate-scroll-cue: scroll-cue 1.8s ease-in-out infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes kenburns {
+    from { transform: scale(1.14); }
+    to { transform: scale(1); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes shimmer {
+    from { background-position: 0% 50%; }
+    to { background-position: 200% 50%; }
+  }
+  @keyframes scroll-cue {
+    0% { transform: translateY(0); opacity: 1; }
+    80% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 0; }
+  }
 }
 
 :root {
@@ -72,6 +101,49 @@ body {
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+/* Animated champagne-gold text */
+@utility gold-shimmer {
+  background-image: linear-gradient(100deg, #b8925a 0%, #e9d3a5 25%, #c2a26b 50%, #f1dfb8 75%, #b8925a 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: var(--animate-shimmer);
+}
+
+/* Light sweep across a button on hover */
+@utility shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* Soft card lift used on interactive cards */
+@utility lift {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s, border-color 0.5s;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 48px -20px rgba(27, 26, 24, 0.35);
+  }
+}
+
+@utility grain {
+  background-image: radial-gradient(rgba(194, 162, 107, 0.08) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 @utility eyebrow {

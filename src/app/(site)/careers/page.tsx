@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Briefcase, Clock, IndianRupee } from "lucide-react";
+import { IMAGES } from "@/lib/images";
 import { PageHero, Section, SectionHeading } from "@/components/site/Section";
 import ApplicationForm from "@/components/site/ApplicationForm";
 import { getOpenJobs } from "@/server/queries/public";
@@ -17,7 +18,7 @@ export default async function CareersPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHero eyebrow="Careers" title="Grow your craft with us">
+      <PageHero image={IMAGES.stylists} eyebrow="Careers" title="Grow your craft with us">
         {settings.name} is a unisex salon in {settings.address.locality}, {settings.address.city}. We&apos;re always happy to hear from skilled, friendly people who
         love hair, grooming and beauty.
       </PageHero>

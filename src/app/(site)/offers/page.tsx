@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ServiceCard from "@/components/site/ServiceCard";
+import { IMAGES } from "@/lib/images";
 import { PageHero, Section, SectionHeading } from "@/components/site/Section";
 import { getPublicCatalog, getPublicOffers } from "@/server/queries/public";
 import { safeLoad } from "@/server/queries/site";
@@ -18,7 +19,7 @@ export default async function OffersPage() {
   const packages = catalog.services.filter((s) => s.kind === "package");
   return (
     <>
-      <PageHero eyebrow="Offers & packages" title="More value, every visit">
+      <PageHero image={IMAGES.makeupKit} eyebrow="Offers & packages" title="More value, every visit">
         Seasonal offers and combined packages. Offer codes are applied at billing in the salon.
       </PageHero>
       <Section>

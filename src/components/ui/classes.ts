@@ -8,8 +8,8 @@ export type Variant = "primary" | "secondary" | "ghost" | "danger" | "gold" | "l
 export type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-charcoal text-ivory hover:bg-charcoal-soft",
-  gold: "bg-gold text-charcoal hover:bg-[#d2b47f]",
+  primary: "shine bg-charcoal text-ivory hover:bg-charcoal-soft",
+  gold: "shine bg-gold text-charcoal shadow-[0_10px_30px_-12px_rgba(194,162,107,0.8)] hover:bg-[#d2b47f]",
   secondary: "border border-charcoal/25 text-charcoal hover:border-charcoal hover:bg-charcoal/5",
   light: "border border-ivory/40 text-ivory hover:bg-ivory/10",
   ghost: "text-charcoal hover:bg-charcoal/5",
