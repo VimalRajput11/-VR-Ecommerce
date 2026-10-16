@@ -37,8 +37,9 @@ export default function ServiceCatalogue({ categories, services, initialCategory
   return (
     <div>
       <div className="sticky top-[76px] z-20 -mx-4 mb-8 border-b border-beige bg-ivory/95 px-4 py-4 backdrop-blur md:-mx-8 md:px-8">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <label className="relative block md:w-80">
+        {/* Row 1: search + audience */}
+        <div className="flex items-center gap-3">
+          <label className="relative block min-w-0 flex-1 md:max-w-md">
             <span className="sr-only">Search services</span>
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone" aria-hidden />
             <input
@@ -46,28 +47,12 @@ export default function ServiceCatalogue({ categories, services, initialCategory
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search services…"
-              className="w-full rounded-md border border-sand bg-white py-2.5 pl-9 pr-3 text-sm focus:border-gold-deep focus:outline-none focus:ring-2 focus:ring-gold/30"
+              className="w-full rounded-full border border-sand bg-white py-2.5 pl-9 pr-4 text-sm focus:border-gold-deep focus:outline-none focus:ring-2 focus:ring-gold/30"
             />
           </label>
-          <div className="hide-scrollbar flex gap-2 overflow-x-auto" role="group" aria-label="Filter by category">
-            {[{ slug: "all", name: "All" }, ...categories].map((c) => (
-              <button
-                key={c.slug}
-                type="button"
-                aria-pressed={category === c.slug}
-                onClick={() => setCategory(c.slug)}
-                className={cx(
-                  "whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-colors",
-                  category === c.slug ? "border-charcoal bg-charcoal text-ivory" : "border-sand bg-white text-charcoal hover:border-charcoal",
-                )}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-          <label className="md:ml-auto">
+          <label className="ml-auto shrink-0">
             <span className="sr-only">Who is it for</span>
-            <select value={audience} onChange={(e) => setAudience(e.target.value)} className="rounded-md border border-sand bg-white px-3 py-2 text-sm">
+            <select value={audience} onChange={(e) => setAudience(e.target.value)} className="rounded-full border border-sand bg-white py-2.5 pl-4 pr-8 text-sm focus:border-gold-deep focus:outline-none">
               {AUDIENCES.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.label}
@@ -75,6 +60,31 @@ export default function ServiceCatalogue({ categories, services, initialCategory
               ))}
             </select>
           </label>
+        </div>
+
+        {/* Row 2: categories — wrap on tablet/desktop, swipe on phones with an edge fade */}
+        <div className="relative mt-3">
+          <div
+            className="hide-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            role="group"
+            aria-label="Filter by category"
+          >
+            {[{ slug: "all", name: "All services" }, ...categories].map((c) => (
+              <button
+                key={c.slug}
+                type="button"
+                aria-pressed={category === c.slug}
+                onClick={() => setCategory(c.slug)}
+                className={cx(
+                  "shrink-0 whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all duration-300",
+                  category === c.slug ? "border-charcoal bg-charcoal text-ivory shadow-sm" : "border-sand bg-white text-charcoal hover:-translate-y-0.5 hover:border-gold-deep",
+                )}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute inset-y-0 -right-4 w-10 bg-gradient-to-l from-ivory to-transparent sm:hidden" aria-hidden />
         </div>
       </div>
 
