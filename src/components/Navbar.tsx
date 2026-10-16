@@ -106,7 +106,7 @@ export default function Navbar({ businessName, announcement }: { businessName: s
       </header>
 
       {open && (
-        <div id="mobile-menu" className="fixed inset-0 z-30 flex flex-col bg-charcoal px-6 pb-10 pt-28 lg:hidden">
+        <div id="mobile-menu" className="fixed inset-0 z-30 flex flex-col overflow-y-auto overscroll-contain bg-charcoal px-6 pb-10 pt-24 lg:hidden">
           <nav className="flex flex-col gap-1" aria-label="Mobile">
             {[{ name: "Home", href: "/" }, ...NAV_LINKS, { name: "Manage a booking", href: "/booking/manage" }].map((l) => (
               <Link key={l.href} href={l.href} className="border-b border-ivory/10 py-4 font-serif text-2xl text-ivory hover:text-gold">
@@ -114,7 +114,7 @@ export default function Navbar({ businessName, announcement }: { businessName: s
               </Link>
             ))}
           </nav>
-          <div className="mt-auto flex flex-col gap-3">
+          <div className="mt-auto flex flex-col gap-3 pt-8">
             <Link href={accountHref} className="rounded-md border border-ivory/30 py-3 text-center text-sm uppercase tracking-widest text-ivory">
               {accountLabel}
             </Link>

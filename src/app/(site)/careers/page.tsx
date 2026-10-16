@@ -69,7 +69,7 @@ export default async function CareersPage({ searchParams }: { searchParams: Prom
       </Section>
 
       <Section tone="cream" id="apply">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr]">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr] [&>*]:min-w-0">
           <div>
             <SectionHeading eyebrow="Apply" title="Send your application" />
             <ul className="space-y-3 text-sm text-stone">

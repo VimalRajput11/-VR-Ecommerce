@@ -291,7 +291,7 @@ export default function BookingWizard({
                               <li key={s.id}>
                                 <label className={cx("flex cursor-pointer items-start gap-3 px-4 py-3", on && "bg-cream/70")}>
                                   <input type="checkbox" checked={on} onChange={() => toggle(s.id)} className="mt-1 h-4 w-4 accent-[#85652f]" />
-                                  <span className="flex-1">
+                                  <span className="min-w-0 flex-1">
                                     <span className="block font-medium">{s.name}</span>
                                     <span className="text-xs text-stone">
                                       {formatDuration(s.durationMin)}
@@ -323,7 +323,7 @@ export default function BookingWizard({
                   <li key={s.id}>
                     <label className="flex cursor-pointer items-center gap-3 px-4 py-3">
                       <input type="checkbox" checked={selected.includes(s.id)} onChange={() => toggle(s.id)} className="h-4 w-4 accent-[#85652f]" />
-                      <span className="flex-1">
+                      <span className="min-w-0 flex-1">
                         {s.name} <span className="text-xs text-stone">· {formatDuration(s.durationMin)}</span>
                       </span>
                       <span className="text-sm">{s.price === null ? "At salon" : formatINR(s.price)}</span>
