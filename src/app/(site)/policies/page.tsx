@@ -7,7 +7,7 @@ import { getSiteSettings } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Booking & Cancellation Policy",
-  description: "Booking, cancellation, rescheduling and late-arrival policy for VG Unisex Saloon.",
+  description: "Booking, cancellation, rescheduling and late-arrival policy for VG Unisex Salon.",
 };
 
 export default async function PoliciesPage() {

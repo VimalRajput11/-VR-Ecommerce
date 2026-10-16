@@ -8,7 +8,7 @@ import { safeLoad } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Services & Prices",
-  description: "Haircuts, colour, men's grooming, facials, threading, waxing, manicures, pedicures, makeup and packages at VG Unisex Saloon, Old Rajendra Nagar, Delhi.",
+  description: "Haircuts, colour, men's grooming, facials, threading, waxing, manicures, pedicures, makeup and packages at VG Unisex Salon, Old Rajendra Nagar, Delhi.",
 };
 
 export default async function ServicesPage({ searchParams }: { searchParams: Promise<{ category?: string }> }) {

@@ -6,14 +6,14 @@ import { getSiteSettings } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
-  description: "Answers to common questions about booking, payments and visiting VG Unisex Saloon.",
+  description: "Answers to common questions about booking, payments and visiting VG Unisex Salon.",
 };
 
 export default async function FaqPage() {
   const s = await getSiteSettings();
   const payMethods = [s.payments.cash && "cash", s.payments.upi && "UPI", s.payments.card && "card"].filter(Boolean).join(", ");
   const faqs: { q: string; a: React.ReactNode }[] = [
-    { q: "Is VG Unisex Saloon for both men and women?", a: "Yes. We offer hair, grooming, skin, nail and makeup services for men, women and children." },
+    { q: "Is VG Unisex Salon for both men and women?", a: "Yes. We offer hair, grooming, skin, nail and makeup services for men, women and children." },
     {
       q: "How do I book an appointment?",
       a: (

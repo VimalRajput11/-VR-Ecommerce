@@ -9,7 +9,7 @@ import { JOB_TYPE_LABELS } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Careers",
-  description: "Join the team at VG Unisex Saloon, Old Rajendra Nagar, Delhi — stylists, beauticians, barbers and front-desk roles.",
+  description: "Join the team at VG Unisex Salon, Old Rajendra Nagar, Delhi — stylists, beauticians, barbers and front-desk roles.",
 };
 
 export default async function CareersPage({ searchParams }: { searchParams: Promise<{ role?: string }> }) {

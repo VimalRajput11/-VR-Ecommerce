@@ -10,7 +10,7 @@ import { buttonClass } from "@/components/ui/classes";
 
 export const metadata: Metadata = {
   title: "Reviews",
-  description: "Verified reviews from clients of VG Unisex Saloon.",
+  description: "Verified reviews from clients of VG Unisex Salon.",
 };
 
 export default async function ReviewsPage() {

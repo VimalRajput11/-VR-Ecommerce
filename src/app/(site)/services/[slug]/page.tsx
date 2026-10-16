@@ -18,7 +18,7 @@ async function load(slug: string) {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { service } = await load((await params).slug);
   if (!service) return { title: "Service not found" };
-  return { title: service.name, description: service.description || `${service.name} at VG Unisex Saloon, Old Rajendra Nagar, Delhi.` };
+  return { title: service.name, description: service.description || `${service.name} at VG Unisex Salon, Old Rajendra Nagar, Delhi.` };
 }
 
 export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -33,7 +33,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       </Link>
       <div className="grid gap-10 md:grid-cols-2">
         <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-cream">
-          <SafeImage src={service.image} alt={`${service.name} at VG Unisex Saloon`} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
+          <SafeImage src={service.image} alt={`${service.name} at VG Unisex Salon`} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
         </div>
         <div>
           <p className="eyebrow text-gold-deep">{service.kind === "package" ? "Package" : service.categoryName}</p>

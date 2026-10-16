@@ -25,7 +25,7 @@ export const DEFAULT_HOURS = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
 const settingsSchema = new Schema(
   {
     _id: { type: String, default: "business" },
-    name: { type: String, default: "VG Unisex Saloon", maxlength: 100 },
+    name: { type: String, default: "VG Unisex Salon", maxlength: 100 },
     ownerName: { type: String, default: "Varshika Rajput", maxlength: 100 },
     tagline: { type: String, default: "Your Style, Your Confidence.", maxlength: 160 },
     about: { type: String, maxlength: 3000, default: "" },
@@ -84,7 +84,7 @@ const settingsSchema = new Schema(
     },
     invoice: {
       prefix: { type: String, default: "VG", maxlength: 10 },
-      footerNote: { type: String, default: "Thank you for visiting VG Unisex Saloon.", maxlength: 300 },
+      footerNote: { type: String, default: "Thank you for visiting VG Unisex Salon.", maxlength: 300 },
     },
     features: {
       inventory: { type: Boolean, default: false },

@@ -91,7 +91,7 @@ export default function ApplicationForm({ jobs, initialRole }: { jobs: { id: str
         onChange={(e) => setConsent(e.target.checked)}
         label={
           <>
-            I agree to VG Unisex Saloon storing these details for hiring purposes, as described in the{" "}
+            I agree to VG Unisex Salon storing these details for hiring purposes, as described in the{" "}
             <Link href="/privacy" className="text-gold-deep underline">
               privacy policy
             </Link>

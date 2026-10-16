@@ -1,5 +1,5 @@
 /**
- * Development/initial seed for VG Unisex Saloon.
+ * Development/initial seed for VG Unisex Salon.
  *
  *   npm run seed
  *

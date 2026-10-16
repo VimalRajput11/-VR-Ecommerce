@@ -7,7 +7,7 @@ import { getSiteSettings } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How VG Unisex Saloon collects, uses and protects your personal information.",
+  description: "How VG Unisex Salon collects, uses and protects your personal information.",
 };
 
 export default async function PrivacyPage() {

@@ -46,7 +46,7 @@ await step("public pages render with new branding", async () => {
   for (const p of ["/", "/careers", "/services", "/offers", "/gallery", "/reviews", "/about", "/contact", "/faq", "/policies", "/privacy", "/terms", "/book", "/booking/manage", "/login", "/register"]) {
     const r = await guest.req(p);
     assert.equal(r.status, 200, `${p} -> ${r.status}`);
-    assert.ok(r.data.includes("VG Unisex Saloon"), `${p} missing brand`);
+    assert.ok(r.data.includes("VG Unisex Salon"), `${p} missing brand`);
     assert.ok(!/VR Nails/i.test(r.data), `${p} still mentions VR Nails`);
   }
 });

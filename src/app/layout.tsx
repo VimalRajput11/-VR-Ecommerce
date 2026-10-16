@@ -19,20 +19,20 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "VG Unisex Saloon | Hair, Grooming & Beauty in Old Rajendra Nagar, Delhi",
-    template: "%s | VG Unisex Saloon",
+    default: "VG Unisex Salon | Hair, Grooming & Beauty in Old Rajendra Nagar, Delhi",
+    template: "%s | VG Unisex Salon",
   },
   description:
-    "VG Unisex Saloon in Bade Bazar, Old Rajendra Nagar, Delhi — haircuts, colour, men's grooming, skin care, nail care and occasion makeup. Book your appointment online.",
-  applicationName: "VG Unisex Saloon",
+    "VG Unisex Salon in Bade Bazar, Old Rajendra Nagar, Delhi — haircuts, colour, men's grooming, skin care, nail care and occasion makeup. Book your appointment online.",
+  applicationName: "VG Unisex Salon",
   openGraph: {
     type: "website",
     locale: "en_IN",
-    siteName: "VG Unisex Saloon",
-    title: "VG Unisex Saloon — Your Style, Your Confidence.",
+    siteName: "VG Unisex Salon",
+    title: "VG Unisex Salon — Your Style, Your Confidence.",
     description: "Premium unisex salon for hair, grooming, skin, nails and makeup in Old Rajendra Nagar, Delhi.",
   },
-  twitter: { card: "summary_large_image", title: "VG Unisex Saloon", description: "Your Style, Your Confidence." },
+  twitter: { card: "summary_large_image", title: "VG Unisex Salon", description: "Your Style, Your Confidence." },
 };
 
 export const viewport: Viewport = {

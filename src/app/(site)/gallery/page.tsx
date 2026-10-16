@@ -11,7 +11,7 @@ import { buttonClass } from "@/components/ui/classes";
 
 export const metadata: Metadata = {
   title: "Gallery",
-  description: "Haircuts, colour, men's grooming, skin, makeup and nail work from VG Unisex Saloon.",
+  description: "Haircuts, colour, men's grooming, skin, makeup and nail work from VG Unisex Salon.",
 };
 
 export default async function GalleryPage() {

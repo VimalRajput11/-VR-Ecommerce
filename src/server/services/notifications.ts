@@ -101,7 +101,7 @@ interface ApptLike {
   items: { name: string }[];
 }
 
-const SALON = "VG Unisex Saloon";
+const SALON = "VG Unisex Salon";
 
 function apptDetails(a: ApptLike) {
   return `Reference: ${a.ref}\nServices: ${a.items.map((i) => i.name).join(", ")}\nDate: ${formatDate(a.start)}\nTime: ${formatTime(a.start)} (IST)`;

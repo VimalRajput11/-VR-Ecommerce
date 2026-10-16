@@ -5,7 +5,7 @@ import { getSiteSettings, safeLoad } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Book an Appointment",
-  description: "Book haircuts, grooming, skin, nail and makeup services online at VG Unisex Saloon.",
+  description: "Book haircuts, grooming, skin, nail and makeup services online at VG Unisex Salon.",
 };
 
 export default async function BookPage({ searchParams }: { searchParams: Promise<{ service?: string }> }) {

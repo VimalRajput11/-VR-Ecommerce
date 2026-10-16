@@ -1,6 +1,6 @@
-# VG Unisex Saloon
+# VG Unisex Salon
 
-Website, online booking, customer portal and salon management dashboard for **VG Unisex Saloon**
+Website, online booking, customer portal and salon management dashboard for **VG Unisex Salon**
 (owner: Varshika Rajput), Bade Bazar, Old Rajendra Nagar, Delhi. One salon, one location.
 
 This project started as the "VR Nails" press-on-nail storefront and was converted in place. The

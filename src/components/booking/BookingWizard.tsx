@@ -49,7 +49,7 @@ function icsFor(b: Booked, salon: string) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//VG Unisex Saloon//Booking//EN",
+    "PRODID:-//VG Unisex Salon//Booking//EN",
     "BEGIN:VEVENT",
     `UID:${b.ref}@vg-unisex-saloon`,
     `DTSTAMP:${fmt(new Date().toISOString())}`,

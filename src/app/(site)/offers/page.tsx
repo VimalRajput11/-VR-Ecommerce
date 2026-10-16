@@ -11,7 +11,7 @@ import { buttonClass } from "@/components/ui/classes";
 
 export const metadata: Metadata = {
   title: "Offers & Packages",
-  description: "Current offers, festival discounts and value packages at VG Unisex Saloon.",
+  description: "Current offers, festival discounts and value packages at VG Unisex Salon.",
 };
 
 export default async function OffersPage() {

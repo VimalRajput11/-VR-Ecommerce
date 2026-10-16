@@ -72,7 +72,7 @@ export const APPLICATION_STATUS_LABELS: Record<string, string> = {
 export const SERVICE_AUDIENCES = ["unisex", "men", "women", "kids"] as const;
 
 export const BRAND = {
-  name: "VG Unisex Saloon",
+  name: "VG Unisex Salon",
   short: "VG",
   owner: "Varshika Rajput",
   locality: "Bade Bazar, Old Rajendra Nagar",

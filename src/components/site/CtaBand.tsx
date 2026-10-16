@@ -20,7 +20,7 @@ export default function CtaBand({
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-charcoal via-charcoal/90 to-charcoal/60" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold/15 blur-[110px]" aria-hidden />
       <Reveal className="mx-auto max-w-3xl text-center">
-        <p className="eyebrow mb-4 text-gold">VG Unisex Saloon</p>
+        <p className="eyebrow mb-4 text-gold">VG Unisex Salon</p>
         <h2 className="font-serif text-4xl leading-tight text-ivory md:text-6xl">
           {title.split(" ").slice(0, -2).join(" ")} <span className="gold-shimmer italic">{title.split(" ").slice(-2).join(" ")}</span>
         </h2>

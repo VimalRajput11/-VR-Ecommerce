@@ -64,7 +64,7 @@ export default function Navbar({ businessName, announcement }: { businessName: s
           <Link href="/" className="flex items-center gap-3" aria-label={`${businessName} home`}>
             <Image src="/logo.svg" alt="" width={44} height={44} priority />
             <span className="hidden whitespace-nowrap font-serif text-lg leading-tight text-ivory sm:block lg:hidden xl:block">
-              VG <span className="text-gold">Unisex Saloon</span>
+              VG <span className="text-gold">Unisex Salon</span>
             </span>
           </Link>
 

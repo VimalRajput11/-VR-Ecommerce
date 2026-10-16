@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* VG Unisex Saloon design tokens: charcoal, warm ivory, champagne gold, muted beige. */
+/* VG Unisex Salon design tokens: charcoal, warm ivory, champagne gold, muted beige. */
 @theme inline {
   --color-charcoal: #1b1a18;
   --color-charcoal-soft: #2a2825;

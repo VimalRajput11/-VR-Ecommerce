@@ -7,7 +7,7 @@ import { getSiteSettings } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions",
-  description: "Terms and conditions for using the VG Unisex Saloon website and services.",
+  description: "Terms and conditions for using the VG Unisex Salon website and services.",
 };
 
 export default async function TermsPage() {

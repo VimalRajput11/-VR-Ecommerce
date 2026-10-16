@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function NotFound() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-charcoal px-4 text-center text-ivory">
-      <Image src="/logo.svg" alt="VG Unisex Saloon" width={72} height={72} />
+      <Image src="/logo.svg" alt="VG Unisex Salon" width={72} height={72} />
       <p className="eyebrow mt-8 text-gold">Page not found</p>
       <h1 className="mt-3 font-serif text-4xl">This page has moved or doesn&apos;t exist</h1>
       <p className="mt-3 max-w-md text-mist">Let&apos;s get you back to looking your best.</p>

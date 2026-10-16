@@ -24,7 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (user.role === "customer") redirect("/account");
   return (
     <DashboardShell
-      businessName={settings?.name ?? "VG Unisex Saloon"}
+      businessName={settings?.name ?? "VG Unisex Salon"}
       features={{
         inventory: !!settings?.features?.inventory,
         reviews: !!settings?.features?.reviews,
