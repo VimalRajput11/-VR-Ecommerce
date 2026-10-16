@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="300" fill="#1b1a18"/>
+  <circle cx="200" cy="150" r="46" fill="none" stroke="#c2a26b" stroke-width="1.5"/>
+  <text x="200" y="164" text-anchor="middle" font-family="Georgia, serif" font-size="38" fill="#c2a26b">VG</text>
+</svg>

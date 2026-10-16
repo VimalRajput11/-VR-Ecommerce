@@ -126,12 +126,12 @@ export default async function HomePage() {
         <div className="grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr]">
           <Reveal className="relative mx-auto w-full max-w-md lg:max-w-none">
             <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
-              <SafeImage src={IMAGES.mensCut} alt="Barber styling a client's haircut" fill sizes="(max-width: 1024px) 90vw, 40vw" className="object-cover" />
+              <SafeImage src={IMAGES.couple} alt="Bride and groom styled for their wedding" fill sizes="(max-width: 1024px) 90vw, 40vw" className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 to-transparent" />
             </div>
             <div className="absolute -bottom-6 -right-4 hidden w-44 overflow-hidden rounded-xl border-4 border-charcoal shadow-2xl sm:block">
               <div className="relative aspect-square">
-                <SafeImage src={IMAGES.facialWoman} alt="Client enjoying a facial treatment" fill sizes="176px" className="object-cover" />
+                <SafeImage src={IMAGES.kid} alt="Smiling boy with a fresh haircut" fill sizes="176px" className="object-cover" />
               </div>
             </div>
             <div className="absolute -left-4 top-8 animate-float rounded-xl bg-gold px-5 py-4 text-charcoal shadow-xl">

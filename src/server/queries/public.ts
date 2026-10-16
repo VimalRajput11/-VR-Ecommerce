@@ -1,7 +1,7 @@
 import { connectDB } from "@/server/db";
 import { Coupon, GalleryImage, JobOpening, Review, Service, ServiceCategory, type JobOpeningDoc, type ServiceDoc } from "@/server/models";
 import { serialiseOpening } from "@/server/services/careers";
-import { CATEGORY_IMAGES } from "@/lib/images";
+import { CATEGORY_IMAGES, serviceImageFor } from "@/lib/images";
 
 // Read-only queries used by public pages (server components) and public APIs.
 
@@ -66,7 +66,7 @@ export async function getPublicCatalog(): Promise<{ categories: PublicCategory[]
           durationMin: s.durationMin,
           price: s.priceVerified ? s.price : null,
           priceFrom: !!s.priceFrom,
-          image: s.image || cat.image || CATEGORY_IMAGES[cat.slug] || "",
+          image: s.image || serviceImageFor(s.slug, s.name) || cat.image || CATEGORY_IMAGES[cat.slug] || "",
           onlineBooking: s.onlineBooking !== false,
           featured: !!s.featured,
           includes: (s.includes ?? []).map((id) => nameById.get(String(id))).filter(Boolean) as string[],
