@@ -2,7 +2,7 @@ import { api, json, readJson } from "@/server/lib/http";
 import { dateKey, escapeRegex, int, isObjectId, objectId, optEmail, optInt, optStr, pagination, phone, str } from "@/server/lib/validate";
 import { badRequest } from "@/server/lib/errors";
 import { requirePermission } from "@/server/auth/session";
-import { Invoice, type InvoiceDoc } from "@/server/models";
+import { Invoice, User, type InvoiceDoc } from "@/server/models";
 import { addDaysToKey, dateKeyIST, istToUtc, minutesOfDayIST } from "@/lib/time";
 import { createInvoice, deleteAllInvoices, serialiseInvoice, type InvoiceInput } from "@/server/services/billing";
 
@@ -55,6 +55,12 @@ export const POST = api(async (req) => {
     loyaltyPoints: optInt(body, "loyaltyPoints", { min: 0, max: 1_000_000 }),
     notes: optStr(body, "notes", { max: 500 }),
   };
+  // Who did the services on a walk-in bill (for their commission); appointments already know their stylist.
+  if (body.staffId) {
+    const staffId = objectId(body.staffId, "staffId");
+    if (!(await User.exists({ _id: staffId, role: { $in: ["owner", "receptionist", "stylist"] } }))) throw badRequest("Choose a valid staff member.", "staffId");
+    input.staffId = staffId;
+  }
   // Optional bill date (IST) for bills entered after the visit: not in the future, at most a year back.
   if (body.billDate) {
     const day = dateKey(body.billDate, "billDate");

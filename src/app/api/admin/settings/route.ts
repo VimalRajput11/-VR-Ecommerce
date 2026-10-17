@@ -43,6 +43,8 @@ const FIELDS: Record<string, Spec> = {
   "address.state": { type: "string", max: 80 },
   "address.postalCode": { type: "string", max: 10, pattern: /^(\d{6})?$/ },
   "address.mapUrl": { type: "string", max: 500, pattern: /^(https:\/\/.*)?$/ },
+  // "latitude, longitude" as copied from Google Maps, or empty.
+  "address.mapCoords": { type: "string", max: 60, pattern: /^(\s*-?\d{1,2}(\.\d+)?\s*,\s*-?\d{1,3}(\.\d+)?\s*)?$/ },
   "address.verified": { type: "bool" },
   "socials.instagram": { type: "string", max: 200, pattern: /^(https:\/\/.*)?$/ },
   "socials.facebook": { type: "string", max: 200, pattern: /^(https:\/\/.*)?$/ },

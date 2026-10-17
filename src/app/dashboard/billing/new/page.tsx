@@ -54,6 +54,8 @@ function NewBill() {
   const [notes, setNotes] = useState("");
   const [today] = useState(() => dateKeyIST());
   const [billDate, setBillDate] = useState(today);
+  const [doneBy, setDoneBy] = useState("");
+  const staffList = useApi<{ staff: { id: string; name: string; active: boolean }[] }>(appointmentId ? null : "/api/admin/staff");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiClientError | null>(null);
 
@@ -83,6 +85,7 @@ function NewBill() {
           loyaltyPoints: Number(points) > 0 ? Math.round(Number(points)) : undefined,
           notes: notes || undefined,
           billDate: billDate || undefined,
+          staffId: !appointmentId && doneBy ? doneBy : undefined,
         },
       });
       router.push(`/dashboard/billing/${res.invoice.id}`);
@@ -176,6 +179,19 @@ function NewBill() {
                 onChange={(e) => setBillDate(e.target.value)}
                 hint={billDate && billDate !== today ? "Entering a bill for an earlier day." : undefined}
               />
+              {/* Appointments already know their stylist; walk-in bills need it for commission. */}
+              {!appointmentId && (
+                <Select label="Done by" value={doneBy} onChange={(e) => setDoneBy(e.target.value)} hint="Counts towards their commission">
+                  <option value="">Not specified</option>
+                  {(staffList.data?.staff ?? [])
+                    .filter((s) => s.active)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                </Select>
+              )}
             </div>
           </Card>
 

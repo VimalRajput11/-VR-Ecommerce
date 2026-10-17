@@ -48,6 +48,8 @@ export interface InvoiceInput {
   notes?: string;
   /** Bill date when entering a bill for an earlier day; defaults to now. */
   issuedAt?: Date;
+  /** Who did the services on a walk-in bill (appointments already know their stylist). */
+  staffId?: Types.ObjectId;
 }
 
 type Line = { kind: "service" | "product" | "custom"; refId?: Types.ObjectId; description: string; qty: number; unitPrice: number; amount: number; taxable: boolean };
@@ -194,6 +196,7 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
       number: await nextInvoiceNumber(settings.invoice?.prefix ?? "VG"),
       appointmentId: appointment?._id,
       activeAppointmentKey: appointment?._id,
+      staffId: appointment?.staffId ?? input.staffId,
       customerId,
       customer,
       lines,

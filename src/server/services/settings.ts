@@ -52,6 +52,7 @@ export function publicSettings(s: Settings) {
       country: s.address?.country,
       // The Maps pin is the salon's confirmed location, so it is used even before the street address is verified.
       mapUrl: s.address?.mapUrl || SALON_MAP_URL,
+      mapCoords: s.address?.mapCoords ?? "",
       verified: !!s.address?.verified,
     },
     socials: s.socials,

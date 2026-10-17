@@ -57,6 +57,8 @@ const invoiceSchema = new Schema(
     voidReason: String,
     loyaltyAwarded: { type: Number, default: 0 },
     gatewayOrderId: String,
+    // Staff member who did the services (from the appointment, or chosen on a walk-in bill); used for commission.
+    staffId: { type: Schema.Types.ObjectId, ref: "User" },
     // Random token for the public invoice link sent to customers on WhatsApp (/i/<token>).
     shareToken: { type: String },
   },

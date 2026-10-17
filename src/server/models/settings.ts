@@ -48,6 +48,8 @@ const settingsSchema = new Schema(
       postalCode: { type: String, default: "", maxlength: 10 },
       country: { type: String, default: "India", maxlength: 60 },
       mapUrl: { type: String, default: SALON_MAP_URL, maxlength: 500 },
+      // Exact pin for the embedded map, "latitude, longitude" (e.g. "28.6402, 77.1856").
+      mapCoords: { type: String, default: "", maxlength: 60 },
       verified: { type: Boolean, default: false },
     },
     socials: {

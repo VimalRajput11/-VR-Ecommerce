@@ -127,6 +127,10 @@ function Settings() {
                 {txt("address.postalCode", "PIN code")}
               </div>
               {txt("address.mapUrl", "Google Maps link (https://…)")}
+              {txt("address.mapCoords", "Map location (latitude, longitude)", {
+                placeholder: "e.g. 28.6402, 77.1856",
+                hint: "Pins the website map exactly. In Google Maps, long-press your shop, then copy the numbers shown at the top.",
+              })}
               {chk("address.verified", "Full address is verified — show street, PIN and map link")}
             </div>
           </Card>

@@ -22,6 +22,7 @@ import {
   History,
   Clock,
   Briefcase,
+  Wallet,
   Menu,
   X,
   LogOut,
@@ -57,6 +58,8 @@ const NAV: NavItem[] = [
   { href: "/dashboard/billing", label: "Billing", icon: Receipt, any: ["billing.manage", "reports.view"] },
   { href: "/dashboard/services", label: "Services", icon: Scissors, any: ["services.manage"] },
   { href: "/dashboard/staff", label: "Staff & hours", icon: UserCog, any: ["staff.manage"] },
+  { href: "/dashboard/payroll", label: "Payroll", icon: Wallet, any: ["payroll.manage"] },
+  { href: "/dashboard/my-salary", label: "My salary", icon: Wallet, any: ["payroll.own"] },
   { href: "/dashboard/availability", label: "My availability", icon: Clock, any: ["availability.own"] },
   { href: "/dashboard/offers", label: "Offers", icon: Tag, any: ["offers.manage"] },
   { href: "/dashboard/inventory", label: "Inventory", icon: Package, any: ["inventory.manage"], feature: "inventory" },
@@ -82,8 +85,10 @@ export default function DashboardShell({ children, businessName, features }: { c
   }
 
   const items = NAV.filter((n) => (!n.feature || features[n.feature]) && n.any.some((p) => user?.permissions.includes(p))).filter(
-    // The owner manages everyone's hours from Staff; "My availability" is for staff.
-    (n) => !(n.href === "/dashboard/availability" && user?.permissions.includes("staff.manage")),
+    // The owner manages everyone's hours and pay from Staff / Payroll; the "My …" pages are for staff.
+    (n) =>
+      !(n.href === "/dashboard/availability" && user?.permissions.includes("staff.manage")) &&
+      !(n.href === "/dashboard/my-salary" && user?.permissions.includes("payroll.manage")),
   );
 
   const nav = (

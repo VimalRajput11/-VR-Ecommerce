@@ -8,6 +8,11 @@ export default function VisitInfo({ settings, dark }: { settings: PublicSettings
   // Skip repeated parts, e.g. city and state both "Delhi".
   const address = [...new Set([settings.address.line1, settings.address.locality, settings.address.city, settings.address.state, settings.address.postalCode].filter(Boolean))].join(", ");
   const mapsQuery = encodeURIComponent(`${settings.name}, ${address}`);
+  // Embedded map: the exact pin when the owner has set coordinates; otherwise the area only, because
+  // searching the salon name finds nothing (and shows an empty spot) if it isn't listed on Google Maps.
+  const coords = settings.address.mapCoords?.replace(/\s+/g, "");
+  const embedQuery = coords || encodeURIComponent([settings.address.line1, settings.address.locality, settings.address.city].filter(Boolean).join(", "));
+  const embedZoom = coords ? 17 : 15;
   return (
     <div className="grid gap-8 md:grid-cols-2">
       <div className="space-y-5">
@@ -78,7 +83,7 @@ export default function VisitInfo({ settings, dark }: { settings: PublicSettings
         <div className="mt-6 overflow-hidden rounded-lg border border-gold/30 shadow-sm">
           <iframe
             title={`Map showing ${settings.name}`}
-            src={`https://maps.google.com/maps?q=${mapsQuery}&z=16&output=embed`}
+            src={`https://maps.google.com/maps?q=${embedQuery}&z=${embedZoom}&output=embed`}
             className="block h-64 w-full border-0 md:h-72"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"

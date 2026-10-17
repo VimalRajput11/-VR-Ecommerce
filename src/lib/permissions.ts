@@ -28,6 +28,8 @@ export const PERMISSIONS = [
   "messages.view",
   "careers.manage", // job openings & applications
   "audit.view",
+  "payroll.manage", // salaries, commission, advances & bonuses (owner only; not grantable)
+  "payroll.own", // staff: view their own salary statement and payments (read-only)
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -43,8 +45,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "billing.manage",
     "billing.discount",
     "messages.view",
+    "payroll.own",
   ],
-  stylist: ["dashboard.view", "appointments.view_own", "appointments.status_own", "availability.own"],
+  stylist: ["dashboard.view", "appointments.view_own", "appointments.status_own", "availability.own", "payroll.own"],
   customer: [],
 };
 
