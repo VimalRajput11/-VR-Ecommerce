@@ -1,4 +1,5 @@
 import { BusinessSettings, type SettingsDoc } from "@/server/models";
+import { SALON_EMAIL, SALON_MAP_URL, SALON_PHONE } from "@/server/models/settings";
 import { connectDB } from "@/server/db";
 
 export type Settings = SettingsDoc;
@@ -17,6 +18,16 @@ export function onlinePaymentsConfigured(): boolean {
   return Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
 }
 
+/** The salon's public email: whatever is saved in settings, else the official salon address. */
+export function salonEmail(s: Settings) {
+  return s.contact?.email || SALON_EMAIL;
+}
+
+/** The salon's public phone: whatever is saved in settings, else the official salon number. */
+export function salonPhone(s: Settings) {
+  return s.contact?.phone || SALON_PHONE;
+}
+
 /** The subset of settings that is safe to expose publicly. */
 export function publicSettings(s: Settings) {
   return {
@@ -25,9 +36,13 @@ export function publicSettings(s: Settings) {
     tagline: s.tagline,
     about: s.about,
     logoUrl: s.logoUrl,
-    contact: s.contact?.verified
-      ? { phone: s.contact.phone, whatsapp: s.contact.whatsapp, email: s.contact.email, verified: true }
-      : { phone: "", whatsapp: "", email: "", verified: false },
+    // Phone, WhatsApp and email are the salon's confirmed details, so they are always shown.
+    contact: {
+      phone: salonPhone(s),
+      whatsapp: s.contact?.whatsapp || SALON_PHONE,
+      email: salonEmail(s),
+      verified: !!s.contact?.verified,
+    },
     address: {
       line1: s.address?.verified ? s.address.line1 : "",
       locality: s.address?.locality,
@@ -35,7 +50,8 @@ export function publicSettings(s: Settings) {
       state: s.address?.state,
       postalCode: s.address?.verified ? s.address.postalCode : "",
       country: s.address?.country,
-      mapUrl: s.address?.verified ? s.address.mapUrl : "",
+      // The Maps pin is the salon's confirmed location, so it is used even before the street address is verified.
+      mapUrl: s.address?.mapUrl || SALON_MAP_URL,
       verified: !!s.address?.verified,
     },
     socials: s.socials,

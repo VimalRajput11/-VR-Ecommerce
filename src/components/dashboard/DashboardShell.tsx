@@ -134,7 +134,7 @@ export default function DashboardShell({ children, businessName, features }: { c
       <div className="flex min-h-screen bg-cream/50">
         <aside className="no-print sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto bg-charcoal px-3 py-5 lg:flex">
           <Link href="/dashboard" className="mb-6 flex items-center gap-2.5 px-2">
-            <Image src="/logo.svg" alt="" width={36} height={36} />
+            <Image src="/logo.png" alt="" width={36} height={36} />
             <span className="font-serif text-ivory">{businessName}</span>
           </Link>
           {nav}
@@ -144,7 +144,7 @@ export default function DashboardShell({ children, businessName, features }: { c
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="no-print sticky top-0 z-30 flex h-14 items-center justify-between bg-charcoal px-4 lg:hidden">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <Image src="/logo.svg" alt="" width={30} height={30} />
+              <Image src="/logo.png" alt="" width={30} height={30} />
               <span className="font-serif text-sm text-ivory">{businessName}</span>
             </Link>
             <button type="button" onClick={() => setOpen(true)} className="rounded p-2 text-ivory" aria-label="Open menu" aria-expanded={open}>

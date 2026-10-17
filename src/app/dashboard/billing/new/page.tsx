@@ -9,6 +9,7 @@ import { useFeatures, RequirePermission } from "@/components/dashboard/Dashboard
 import { Alert, Button, Card, Input, PageHeader, Select, Spinner } from "@/components/ui";
 import type { AdminService, StaffAppointment } from "@/components/dashboard/types";
 import { formatINR, rupeesToPaise } from "@/lib/money";
+import { dateKeyIST } from "@/lib/time";
 import { formatPhone } from "@/lib/format";
 
 export default function NewBillPage() {
@@ -51,6 +52,8 @@ function NewBill() {
   const [discount, setDiscount] = useState({ type: "percent", value: "", reason: "" });
   const [points, setPoints] = useState("");
   const [notes, setNotes] = useState("");
+  const [today] = useState(() => dateKeyIST());
+  const [billDate, setBillDate] = useState(today);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<ApiClientError | null>(null);
 
@@ -79,6 +82,7 @@ function NewBill() {
           manualDiscount: dv > 0 ? { type: discount.type, value: discount.type === "percent" ? Math.round(dv) : rupeesToPaise(dv), reason: discount.reason } : undefined,
           loyaltyPoints: Number(points) > 0 ? Math.round(Number(points)) : undefined,
           notes: notes || undefined,
+          billDate: billDate || undefined,
         },
       });
       router.push(`/dashboard/billing/${res.invoice.id}`);
@@ -107,30 +111,72 @@ function NewBill() {
                 <span className="block text-xs text-stone">Appointment {appt.data.appointment.ref}</span>
               </p>
             ) : (
-              <div className="space-y-3">
-                {can("customers.view") && (
-                  <div className="relative">
-                    <Input label="Find customer" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Name or phone" />
-                    {hits.data?.items.length ? (
-                      <ul className="absolute z-10 mt-1 w-full rounded-md border border-beige bg-white shadow-lg">
-                        {hits.data.items.map((c) => (
-                          <li key={c.id}>
-                            <button type="button" className="w-full px-3 py-2 text-left text-sm hover:bg-cream" onClick={() => { setCustomer({ id: c.id, name: c.name, phone: c.phone, email: c.email }); setSearch(""); }}>
-                              {c.name} · {formatPhone(c.phone)}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </div>
-                )}
+              // Typing a name or mobile number also searches existing customers; picking one fills all fields.
+              <div className="relative">
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <Input label="Name" required value={customer.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value, id: "" })} />
-                  <Input label="Mobile" required type="tel" value={customer.phone} onChange={(e) => setCustomer({ ...customer, phone: e.target.value, id: "" })} />
+                  <Input
+                    label="Name"
+                    required
+                    autoComplete="off"
+                    value={customer.name}
+                    onChange={(e) => {
+                      setCustomer({ ...customer, name: e.target.value, id: "" });
+                      setSearch(e.target.value);
+                    }}
+                  />
+                  <Input
+                    label="Mobile"
+                    required
+                    type="tel"
+                    autoComplete="off"
+                    value={customer.phone}
+                    onChange={(e) => {
+                      setCustomer({ ...customer, phone: e.target.value, id: "" });
+                      setSearch(e.target.value);
+                    }}
+                  />
                   <Input label="Email" type="email" value={customer.email} onChange={(e) => setCustomer({ ...customer, email: e.target.value })} />
                 </div>
+                {search && !customer.id && hits.data?.items.length ? (
+                  <ul className="absolute z-10 mt-1 w-full rounded-md border border-beige bg-white shadow-lg sm:w-2/3">
+                    <li className="px-3 pt-2 text-xs text-stone">Existing customers</li>
+                    {hits.data.items.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-cream"
+                          onClick={() => {
+                            setCustomer({ id: c.id, name: c.name, phone: c.phone, email: c.email });
+                            setSearch("");
+                          }}
+                        >
+                          {c.name} · {formatPhone(c.phone)}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {customer.id && (
+                  <p className="mt-2 text-xs text-success">
+                    Existing customer selected.{" "}
+                    <button type="button" className="text-stone underline hover:text-charcoal" onClick={() => setCustomer({ id: "", name: "", phone: "", email: "" })}>
+                      Clear
+                    </button>
+                  </p>
+                )}
               </div>
             )}
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Input
+                label="Bill date"
+                type="date"
+                required
+                max={today}
+                value={billDate}
+                onChange={(e) => setBillDate(e.target.value)}
+                hint={billDate && billDate !== today ? "Entering a bill for an earlier day." : undefined}
+              />
+            </div>
           </Card>
 
           <Card title="Items">

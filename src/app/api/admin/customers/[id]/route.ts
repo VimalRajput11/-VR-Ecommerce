@@ -20,6 +20,12 @@ export const GET = api<Ctx>(async (_req, ctx) => {
   const names = await staffNameMap(appointments.map((a) => a.staffId));
   const live = invoices.filter((i) => i.status !== "void");
   const canSeeNotes = user.permissions.includes("customers.manage") || user.permissions.includes("appointments.internal_notes");
+  // Visits = completed appointments + bills made without an appointment (walk-ins).
+  const walkInBills = live.filter((i) => !i.appointmentId);
+  const billDates = live.map((i) => i.issuedAt.getTime());
+  const visitDates = [customer.firstVisitAt, customer.lastVisitAt].filter((d): d is Date => !!d).map((d) => d.getTime()).concat(billDates);
+  const firstVisitAt = visitDates.length ? new Date(Math.min(...visitDates)) : null;
+  const lastVisitAt = visitDates.length ? new Date(Math.max(...visitDates)) : null;
   return json({
     customer: {
       id: String(customer._id),
@@ -31,12 +37,12 @@ export const GET = api<Ctx>(async (_req, ctx) => {
       internalNotes: canSeeNotes ? (customer.internalNotes ?? "") : undefined,
       marketingConsent: !!customer.marketingConsent,
       loyaltyPoints: customer.loyaltyPoints ?? 0,
-      firstVisitAt: customer.firstVisitAt,
-      lastVisitAt: customer.lastVisitAt,
+      firstVisitAt,
+      lastVisitAt,
       createdAt: customer.createdAt,
     },
     summary: {
-      visits: appointments.filter((a) => a.status === "completed").length,
+      visits: appointments.filter((a) => a.status === "completed").length + walkInBills.length,
       cancelled: appointments.filter((a) => a.status === "cancelled").length,
       noShows: appointments.filter((a) => a.status === "no_show").length,
       billed: live.reduce((s, i) => s + i.total, 0),
@@ -69,7 +75,9 @@ export const PATCH = api<Ctx>(async (req, ctx) => {
     if ("email" in body) set.email = optEmail(body) ?? "";
     const prefs = clearableStr(body, "preferences", { max: 1000 });
     if (prefs !== undefined) set.preferences = prefs;
-  } else if (["name", "phone", "email", "preferences"].some((k) => k in body)) {
+    // Recorded by staff when the customer agrees at the salon to receive offers (e.g. on WhatsApp).
+    if (typeof body.marketingConsent === "boolean") set.marketingConsent = body.marketingConsent;
+  } else if (["name", "phone", "email", "preferences", "marketingConsent"].some((k) => k in body)) {
     throw forbidden();
   }
   const notes = clearableStr(body, "internalNotes", { max: 2000 });

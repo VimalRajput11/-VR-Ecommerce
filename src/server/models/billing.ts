@@ -57,9 +57,12 @@ const invoiceSchema = new Schema(
     voidReason: String,
     loyaltyAwarded: { type: Number, default: 0 },
     gatewayOrderId: String,
+    // Random token for the public invoice link sent to customers on WhatsApp (/i/<token>).
+    shareToken: { type: String },
   },
   { timestamps: true },
 );
+invoiceSchema.index({ shareToken: 1 }, { unique: true, partialFilterExpression: { shareToken: { $type: "string" } } });
 // Set to appointmentId while the invoice is live and unset when voided, so an appointment can
 // only ever have one live invoice.
 invoiceSchema.index(

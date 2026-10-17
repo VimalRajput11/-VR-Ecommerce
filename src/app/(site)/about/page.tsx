@@ -10,7 +10,7 @@ import { buttonClass } from "@/components/ui/classes";
 
 export const metadata: Metadata = {
   title: "About Us",
-  description: "About VG Unisex Salon, owned by Varshika Rajput, in Bade Bazar, Old Rajendra Nagar, Delhi.",
+  description: "About VG Unisex Salon, owned by Varshika Rajput, in Bada Bazar, Old Rajendra Nagar, Delhi.",
 };
 
 export default async function AboutPage() {

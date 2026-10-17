@@ -21,9 +21,21 @@ export const GET = api(async (req) => {
   ]);
   const spend = await Invoice.aggregate([
     { $match: { customerId: { $in: items.map((i) => i._id) }, status: { $ne: "void" } } },
-    { $group: { _id: "$customerId", paid: { $sum: { $subtract: ["$amountPaid", "$amountRefunded"] } }, due: { $sum: "$balanceDue" } } },
+    {
+      $group: {
+        _id: "$customerId",
+        paid: { $sum: { $subtract: ["$amountPaid", "$amountRefunded"] } },
+        due: { $sum: "$balanceDue" },
+        lastBill: { $max: "$issuedAt" },
+      },
+    },
   ]);
   const spendMap = new Map(spend.map((s) => [String(s._id), s]));
+  // Last visit = latest completed appointment or bill (walk-ins are often billed without an appointment).
+  const lastVisit = (c: { _id: unknown; lastVisitAt?: Date | null }) => {
+    const bill: Date | undefined = spendMap.get(String(c._id))?.lastBill;
+    return c.lastVisitAt && (!bill || c.lastVisitAt > bill) ? c.lastVisitAt : (bill ?? null);
+  };
   return json({
     items: items.map((c) => ({
       id: String(c._id),
@@ -31,7 +43,7 @@ export const GET = api(async (req) => {
       phone: c.phone ?? "",
       email: c.email ?? "",
       isGuest: !!c.isGuest,
-      lastVisitAt: c.lastVisitAt,
+      lastVisitAt: lastVisit(c),
       totalPaid: spendMap.get(String(c._id))?.paid ?? 0,
       balanceDue: spendMap.get(String(c._id))?.due ?? 0,
     })),

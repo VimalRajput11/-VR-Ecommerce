@@ -6,6 +6,7 @@ import {
   Counter,
   Invoice,
   LoyaltyTransaction,
+  Notification,
   Payment,
   Product,
   Service,
@@ -18,10 +19,11 @@ import { badRequest, conflict, forbidden, notFound } from "@/server/lib/errors";
 import { dateKeyIST } from "@/lib/time";
 import { formatINR } from "@/lib/money";
 import { computeTotals, couponDiscount, deriveInvoiceStatus, loyaltyPointsFor } from "./billing-core";
-import { getSettings, type Settings } from "./settings";
+import { getSettings, salonEmail, salonPhone, type Settings } from "./settings";
 import { resolveCustomer, type CustomerInput } from "./booking";
 import { adjustStock } from "./inventory";
 import { notifyInvoice, notifyPayment } from "./notifications";
+import { autoSendInvoiceWhatsApp } from "./whatsapp";
 import { audit } from "./audit";
 
 export async function nextInvoiceNumber(prefix: string): Promise<string> {
@@ -44,6 +46,8 @@ export interface InvoiceInput {
   manualDiscount?: { type: "percent" | "flat"; value: number; reason: string };
   loyaltyPoints?: number;
   notes?: string;
+  /** Bill date when entering a bill for an earlier day; defaults to now. */
+  issuedAt?: Date;
 }
 
 type Line = { kind: "service" | "product" | "custom"; refId?: Types.ObjectId; description: string; qty: number; unitPrice: number; amount: number; taxable: boolean };
@@ -207,6 +211,7 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
       amountPaid: 0,
       status: totals.total === 0 ? "paid" : "unpaid",
       notes: input.notes,
+      issuedAt: input.issuedAt ?? new Date(),
       issuedBy: actor.id,
     });
     undo.push(() => Invoice.deleteOne({ _id: invoice._id }));
@@ -225,8 +230,15 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
     }
     if (appointment) await Appointment.updateOne({ _id: appointment._id }, { $set: { invoiceId: invoice._id } });
 
+    // A bill means the customer visited (walk-ins often have no appointment), so keep visit dates
+    // current for the customer list and WhatsApp offers. Back-dated bills never move dates backwards.
+    const visitedAt = invoice.issuedAt;
+    await User.updateOne({ _id: customerId, $or: [{ lastVisitAt: { $exists: false } }, { lastVisitAt: null }, { lastVisitAt: { $lt: visitedAt } }] }, { $set: { lastVisitAt: visitedAt } });
+    await User.updateOne({ _id: customerId, $or: [{ firstVisitAt: { $exists: false } }, { firstVisitAt: null }, { firstVisitAt: { $gt: visitedAt } }] }, { $set: { firstVisitAt: visitedAt } });
+
     await audit(actor, "invoice.create", "Invoice", String(invoice._id), `Issued ${invoice.number} for ${formatINR(invoice.total)}`);
     await notifyInvoice(invoice);
+    await autoSendInvoiceWhatsApp(invoice);
     return invoice;
   } catch (err) {
     for (const fn of undo.reverse()) await fn().catch((e) => console.error("[billing] rollback failed", e));
@@ -375,6 +387,34 @@ export async function voidInvoice(invoiceId: Types.ObjectId, reason: string, act
   return inv;
 }
 
+/**
+ * Owner-only reset: permanently deletes every invoice and everything that hangs off it (payments,
+ * coupon uses, loyalty earned/redeemed on bills, invoice notifications), unlinks appointments,
+ * and restarts invoice numbering. Product stock movements are kept, since stock is physical.
+ */
+export async function deleteAllInvoices(actor: AuthUser) {
+  if (actor.role !== "owner") throw forbidden("Only the owner can delete invoices.");
+  const ids = (await Invoice.find().select("_id").lean()).map((i) => i._id);
+  await Promise.all([
+    Payment.deleteMany({}),
+    CouponRedemption.deleteMany({}),
+    LoyaltyTransaction.deleteMany({ invoiceId: { $exists: true } }),
+    Notification.deleteMany({ event: { $in: ["invoice_issued", "payment_received", "invoice_whatsapp"] } }),
+    Appointment.updateMany({ invoiceId: { $exists: true } }, { $unset: { invoiceId: "" } }),
+    Coupon.updateMany({}, { $set: { redemptions: 0 } }),
+  ]);
+  await Invoice.deleteMany({});
+  await Counter.deleteMany({ _id: /^invoice-/ });
+
+  // Loyalty balances are rebuilt from whatever transactions remain (e.g. manual adjustments).
+  const balances = await LoyaltyTransaction.aggregate<{ _id: Types.ObjectId; points: number }>([{ $group: { _id: "$customerId", points: { $sum: "$points" } } }]);
+  await User.updateMany({ loyaltyPoints: { $gt: 0 } }, { $set: { loyaltyPoints: 0 } });
+  for (const b of balances) await User.updateOne({ _id: b._id }, { $set: { loyaltyPoints: Math.max(0, b.points) } });
+
+  await audit(actor, "invoice.delete_all", "Invoice", "all", `Deleted all ${ids.length} invoices and their payments`);
+  return { deleted: ids.length };
+}
+
 export function serialiseInvoice(inv: InvoiceDoc, payments: { kind: string; method: string; amount: number; reference?: string | null; note?: string | null; createdAt?: Date }[] = []) {
   return {
     id: String(inv._id),
@@ -402,11 +442,12 @@ export function serialiseInvoice(inv: InvoiceDoc, payments: { kind: string; meth
 export function invoiceBusiness(settings: Settings) {
   return {
     name: settings.name,
+    tagline: settings.tagline ?? "",
     address: [settings.address?.verified ? settings.address.line1 : "", settings.address?.locality, settings.address?.city]
       .filter(Boolean)
       .join(", "),
-    phone: settings.contact?.verified ? settings.contact.phone : "",
-    email: settings.contact?.verified ? settings.contact.email : "",
+    phone: salonPhone(settings),
+    email: salonEmail(settings),
     gstin: settings.tax?.enabled ? settings.tax.gstin : "",
     footerNote: settings.invoice?.footerNote ?? "",
   };

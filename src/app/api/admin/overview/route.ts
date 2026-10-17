@@ -13,6 +13,7 @@ import {
   popularServices,
   salesSummary,
   staffWorkload,
+  walkInBills,
 } from "@/server/services/reports";
 import { getSettings } from "@/server/services/settings";
 
@@ -31,12 +32,15 @@ export const GET = api(async (req) => {
   const ownFilter = seeAll ? {} : { staffId: new Types.ObjectId(user.id) };
   const settings = await getSettings();
 
-  const [todayList, upcomingCount, todayStats, rangeStats] = await Promise.all([
+  const [todayList, upcomingCount, todayStats, rangeStats, todayWalkInBills] = await Promise.all([
     Appointment.find({ ...ownFilter, start: { $gte: todayRange.from, $lt: todayRange.to } }).sort({ start: 1 }).limit(100).lean<AppointmentDoc[]>(),
     Appointment.countDocuments({ ...ownFilter, start: { $gte: todayRange.to, $lt: istToUtc(addDaysToKey(today, 8), 0) }, status: { $in: ["pending", "confirmed"] } }),
     appointmentStats(todayRange, seeAll ? undefined : new Types.ObjectId(user.id)),
     appointmentStats(range, seeAll ? undefined : new Types.ObjectId(user.id)),
+    seeAll ? walkInBills(todayRange) : 0,
   ]);
+  // Walk-ins today = walk-in appointments + customers billed at the counter without an appointment.
+  todayStats.walkIns += todayWalkInBills;
   const names = await staffNameMap(todayList.map((a) => a.staffId));
   const contact = user.permissions.includes("customers.view");
 

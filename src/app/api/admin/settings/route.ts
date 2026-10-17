@@ -5,6 +5,7 @@ import { requirePermission } from "@/server/auth/session";
 import { BusinessSettings } from "@/server/models";
 import { getSettings, onlinePaymentsConfigured } from "@/server/services/settings";
 import { emailConfigured } from "@/server/services/notifications";
+import { whatsappApiConfigured } from "@/server/services/whatsapp";
 import { audit } from "@/server/services/audit";
 import { parseBreaks } from "@/server/services/staff";
 
@@ -18,7 +19,7 @@ export const GET = api(async () => {
       paymentWebhook: Boolean(process.env.RAZORPAY_WEBHOOK_SECRET),
       email: emailConfigured(),
       sms: false,
-      whatsapp: false,
+      whatsapp: whatsappApiConfigured(),
       cron: Boolean(process.env.CRON_SECRET),
     },
   });

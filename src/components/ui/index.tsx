@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { forwardRef, useEffect, useId, useRef, type ReactNode } from "react";
-import { Loader2, X, AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { forwardRef, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Loader2, X, AlertCircle, CheckCircle2, Info, Eye, EyeOff } from "lucide-react";
 import { STATUS_LABELS, INVOICE_STATUS_LABELS, type AppointmentStatus } from "@/lib/constants";
 
 export { cx, buttonClass } from "./classes";
@@ -75,12 +75,40 @@ export function Field({ label, hint, error, required, children, className }: Fie
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string; error?: string | null; wrapClassName?: string };
 
-export function Input({ label, hint, error, wrapClassName, className, required, ...rest }: InputProps) {
+export function Input({ label, hint, error, wrapClassName, className, required, type, ...rest }: InputProps) {
+  // Password fields get an eye button that toggles the text between hidden and visible.
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
   return (
     <Field label={label} hint={hint} error={error} required={required} className={wrapClassName}>
-      {(id, describedBy) => (
-        <input id={id} aria-describedby={describedBy} aria-invalid={!!error || undefined} required={required} className={cx(inputBase, className)} {...rest} />
-      )}
+      {(id, describedBy) => {
+        const input = (
+          <input
+            id={id}
+            aria-describedby={describedBy}
+            aria-invalid={!!error || undefined}
+            required={required}
+            type={isPassword && showPassword ? "text" : type}
+            className={cx(inputBase, isPassword && "pr-11", className)}
+            {...rest}
+          />
+        );
+        if (!isPassword) return input;
+        return (
+          <div className="relative">
+            {input}
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-stone hover:text-charcoal focus-visible:outline-none focus-visible:text-charcoal"
+            >
+              {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+            </button>
+          </div>
+        );
+      }}
     </Field>
   );
 }

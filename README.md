@@ -1,7 +1,7 @@
 # VG Unisex Salon
 
 Website, online booking, customer portal and salon management dashboard for **VG Unisex Salon**
-(owner: Varshika Rajput), Bade Bazar, Old Rajendra Nagar, Delhi. One salon, one location.
+(owner: Varshika Rajput), Bada Bazar, Old Rajendra Nagar, Delhi. One salon, one location.
 
 This project started as the "VR Nails" press-on-nail storefront and was converted in place. The
 store pages (shop, product, cart, checkout, wishlist) used hardcoded demo products and a simulated
@@ -151,8 +151,38 @@ only if under its limit") with compensating rollbacks if a later step fails.
 |---|---|---|
 | Online payments (Razorpay) | Implemented, **untested against live Razorpay** (no keys available) | Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`; add webhook `https://<domain>/api/payments/razorpay/webhook` for `payment.captured` (auto-capture on); then enable in Settings. Test in Razorpay test mode first. Refunds of online payments must also be issued in the Razorpay dashboard. |
 | Email (Resend) | Implemented, **untested against live provider** | Set `RESEND_API_KEY` and `EMAIL_FROM` (verified domain). Without it, emails are logged as "skipped". |
-| SMS / WhatsApp | **Not implemented** — recorded as "skipped" | Requires choosing a provider (e.g. MSG91, Gupshup, Twilio WhatsApp) and DLT/template approval. |
+| WhatsApp (invoices & offers) | Tap-to-send works with no setup. Business API implemented, **untested against live Meta** | See [WhatsApp](#whatsapp) below. |
+| SMS | **Not implemented** — recorded as "skipped" | Requires choosing a provider (e.g. MSG91) and DLT/template approval. |
 | Appointment reminders | Implemented | Set `CRON_SECRET` and call `POST /api/cron/reminders` with `Authorization: Bearer <secret>` every ~15 min (e.g. Vercel Cron, GitHub Actions, or `cron` + `curl`). |
+
+### WhatsApp
+
+**Tap-to-send (no setup, free).** On an invoice (Dashboard → Billing → invoice), the **Send on WhatsApp** card
+has **Open WhatsApp**: it opens WhatsApp (app or web) on the device you're using, with a thank-you message
+and a private invoice link (`/i/<token>`, works without signing in) already written. Press Send. In
+**Dashboard → Offers**, the **WhatsApp** button on each offer lists customers who visited in a chosen period,
+each with an **Open WhatsApp** button and an editable message (`{name}` becomes the customer's first name).
+Sent messages are remembered, so the list shows who already got the offer.
+
+**Marketing consent.** WhatsApp only allows offers to people who agreed to receive them. Tick
+**Agreed to receive offers** on the customer (Dashboard → Customers) when they say yes. The offers list
+shows opted-in customers by default, and bulk API sending only ever goes to them.
+
+**Automatic sending (WhatsApp Business Platform).**
+1. In [Meta Business Suite](https://business.facebook.com) create a WhatsApp Business account, add and
+   verify the salon's number, and create a permanent System User access token with `whatsapp_business_messaging`.
+2. Create two message templates and wait for approval:
+   - `invoice_receipt` (category **Utility**), body with 4 variables:
+     `Thank you for visiting VG Unisex Salon! Dear {{1}}, your invoice {{2}} for today's services is {{3}}. View or download it here: {{4}}`
+   - `salon_offer` (category **Marketing**), body with 5 variables:
+     `Hi {{1}}! {{2}}: {{3}}. Use code {{4}} at the salon. Valid till {{5}}.`
+     Add buttons **Call phone number** ("Call Us", +91 88004 01064) and **Visit website** ("Get Direction",
+     your Google Maps link), and the footer "Reply STOP to unsubscribe".
+3. Set `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID` (and the template names if you used others), redeploy.
+4. Dashboard → Settings → Notifications → tick **WhatsApp: send invoices automatically**.
+
+Meta charges per conversation (marketing messages cost more than utility ones). Replies and "STOP"
+messages arrive in the WhatsApp Business app/inbox; unticking the customer's consent stops future offers.
 
 In-app notifications always work for registered customers. Delivery results (sent / failed / skipped)
 are visible in **Dashboard → Activity log → Notification delivery**.

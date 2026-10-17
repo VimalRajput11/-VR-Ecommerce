@@ -175,7 +175,7 @@ export default function OverviewPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {data.popular && (
               <Card title="Popular services">
-                <HBarList data={data.popular.map((p) => ({ label: p.name, value: p.count, display: `${p.count} booked` }))} />
+                <HBarList data={data.popular.map((p) => ({ label: p.name, value: p.count, display: `${p.count}×` }))} />
               </Card>
             )}
             {data.workload && (

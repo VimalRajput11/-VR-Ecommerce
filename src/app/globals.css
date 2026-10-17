@@ -153,11 +153,47 @@ body {
   font-weight: 600;
 }
 
+/* The invoice is portalled to <body> as .print-only; when it exists, print only that copy so
+   the surrounding page (sidebar, header, footer, full-height layout) can't add extra pages. */
+.print-only {
+  display: none;
+}
+
+/* Zero page margin stops the browser printing its own date/title/URL header and footer;
+   the spacing comes from .print-only's padding instead. */
+@page {
+  size: A4;
+  margin: 0;
+}
+
 @media print {
   .no-print {
     display: none !important;
   }
+  html,
   body {
     background: #fff;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  body:has(> .print-only) > :not(.print-only) {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+    padding: 12mm;
+  }
+  /* Keep the dark brand band, gold accents and tinted panels when printing. */
+  .invoice-sheet,
+  .invoice-sheet * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* Gold frame around the printed invoice. */
+  .invoice-sheet {
+    border: 1.5px solid #c2a26b;
+    border-radius: 10px;
+    box-shadow: none;
+    break-inside: avoid;
   }
 }

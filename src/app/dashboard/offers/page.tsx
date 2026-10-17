@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { MessageCircle } from "lucide-react";
 import { apiFetch, ApiClientError, useApi } from "@/lib/api";
+import WhatsAppOfferModal from "@/components/dashboard/WhatsAppOfferModal";
 import { useToast } from "@/context/ToastContext";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { Alert, Badge, Button, Checkbox, EmptyState, ErrorState, Input, Modal, PageHeader, Select, Spinner, Table, Td, Textarea, Th } from "@/components/ui";
@@ -42,6 +44,7 @@ export default function OffersPage() {
 function Offers() {
   const { data, error, loading, reload } = useApi<{ coupons: Coupon[] }>("/api/admin/coupons");
   const [editing, setEditing] = useState<Coupon | "new" | null>(null);
+  const [sharing, setSharing] = useState<Coupon | null>(null);
   const [now] = useState(() => Date.now());
   return (
     <div>
@@ -65,6 +68,9 @@ function Offers() {
               <Th>Valid</Th>
               <Th>Used</Th>
               <Th>Status</Th>
+              <Th>
+                <span className="sr-only">Actions</span>
+              </Th>
             </tr>
           </thead>
           <tbody>
@@ -86,6 +92,18 @@ function Offers() {
                     {c.maxRedemptions ? ` / ${c.maxRedemptions}` : ""}
                   </Td>
                   <Td>{live ? <Badge className="bg-[#eef5ef] text-success">Live</Badge> : <Badge>{c.active ? "Scheduled / ended" : "Off"}</Badge>}</Td>
+                  <Td>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSharing(c);
+                      }}
+                    >
+                      <MessageCircle size={14} aria-hidden /> WhatsApp
+                    </Button>
+                  </Td>
                 </tr>
               );
             })}
@@ -93,6 +111,7 @@ function Offers() {
         </Table>
       )}
       {editing && <CouponModal coupon={editing === "new" ? null : editing} onClose={() => setEditing(null)} onSaved={reload} />}
+      {sharing && <WhatsAppOfferModal coupon={sharing} onClose={() => setSharing(null)} />}
     </div>
   );
 }

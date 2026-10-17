@@ -12,7 +12,7 @@ export default function Footer({ settings }: { settings: PublicSettings }) {
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 md:grid-cols-4 md:px-8">
         <div>
           <Link href="/" className="mb-4 flex items-center gap-3">
-            <Image src="/logo.svg" alt="" width={48} height={48} />
+            <Image src="/logo.png" alt="" width={48} height={48} />
             <span className="font-serif text-lg text-ivory">{settings.name}</span>
           </Link>
           <p className="text-sm leading-relaxed text-mist">
@@ -48,15 +48,15 @@ export default function Footer({ settings }: { settings: PublicSettings }) {
           <ul className="space-y-3 text-sm">
             <li className="flex gap-2.5">
               <MapPin size={16} className="mt-0.5 shrink-0 text-gold" aria-hidden />
-              <span>{address}</span>
+              <a href={settings.address.mapUrl} target="_blank" rel="noopener noreferrer" className="hover:text-gold">{address}</a>
             </li>
-            {settings.contact.verified && settings.contact.phone && (
+            {settings.contact.phone && (
               <li className="flex gap-2.5">
                 <Phone size={16} className="mt-0.5 shrink-0 text-gold" aria-hidden />
                 <a href={`tel:+91${settings.contact.phone}`} className="hover:text-gold">{formatPhone(settings.contact.phone)}</a>
               </li>
             )}
-            {settings.contact.verified && settings.contact.email && (
+            {settings.contact.email && (
               <li className="flex gap-2.5">
                 <Mail size={16} className="mt-0.5 shrink-0 text-gold" aria-hidden />
                 <a href={`mailto:${settings.contact.email}`} className="break-all hover:text-gold">{settings.contact.email}</a>
@@ -65,9 +65,7 @@ export default function Footer({ settings }: { settings: PublicSettings }) {
             <li className="flex gap-2.5">
               <Clock size={16} className="mt-0.5 shrink-0 text-gold" aria-hidden />
               <span>{settings.hoursVerified ? hoursSummary(settings.hours) : "Opening hours will be published soon."}</span>
-            </li>
-            {!settings.contact.verified && <li className="text-xs text-mist">Phone and email details will be added shortly.</li>}
-          </ul>
+            </li>          </ul>
         </div>
       </div>
       <div className="border-t border-ivory/10">

@@ -28,40 +28,34 @@ export default function VisitInfo({ settings, dark }: { settings: PublicSettings
             {!settings.address.verified && <p className={`mt-1 text-xs ${muted}`}>Full street address will be added soon.</p>}
           </div>
         </div>
-        {settings.contact.verified ? (
-          <>
-            {settings.contact.phone && (
-              <div className="flex gap-3">
-                <Phone className="mt-1 shrink-0 text-gold" size={20} aria-hidden />
-                <div>
-                  <p className="font-medium">Phone</p>
-                  <a href={`tel:+91${settings.contact.phone}`} className={`${muted} hover:text-gold`}>{formatPhone(settings.contact.phone)}</a>
-                </div>
-              </div>
-            )}
-            {settings.contact.whatsapp && (
-              <div className="flex gap-3">
-                <MessageCircle className="mt-1 shrink-0 text-gold" size={20} aria-hidden />
-                <div>
-                  <p className="font-medium">WhatsApp</p>
-                  <a href={`https://wa.me/91${settings.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className={`${muted} hover:text-gold`}>
-                    {formatPhone(settings.contact.whatsapp)}
-                  </a>
-                </div>
-              </div>
-            )}
-            {settings.contact.email && (
-              <div className="flex gap-3">
-                <Mail className="mt-1 shrink-0 text-gold" size={20} aria-hidden />
-                <div>
-                  <p className="font-medium">Email</p>
-                  <a href={`mailto:${settings.contact.email}`} className={`${muted} break-all hover:text-gold`}>{settings.contact.email}</a>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <p className={`text-sm ${muted}`}>Phone and email details will be published soon. Meanwhile you can book online or send us a message.</p>
+        {settings.contact.phone && (
+          <div className="flex gap-3">
+            <Phone className="mt-1 shrink-0 text-gold" size={20} aria-hidden />
+            <div>
+              <p className="font-medium">Phone</p>
+              <a href={`tel:+91${settings.contact.phone}`} className={`${muted} hover:text-gold`}>{formatPhone(settings.contact.phone)}</a>
+            </div>
+          </div>
+        )}
+        {settings.contact.whatsapp && (
+          <div className="flex gap-3">
+            <MessageCircle className="mt-1 shrink-0 text-gold" size={20} aria-hidden />
+            <div>
+              <p className="font-medium">WhatsApp</p>
+              <a href={`https://wa.me/91${settings.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className={`${muted} hover:text-gold`}>
+                {formatPhone(settings.contact.whatsapp)}
+              </a>
+            </div>
+          </div>
+        )}
+        {settings.contact.email && (
+          <div className="flex gap-3">
+            <Mail className="mt-1 shrink-0 text-gold" size={20} aria-hidden />
+            <div>
+              <p className="font-medium">Email</p>
+              <a href={`mailto:${settings.contact.email}`} className={`${muted} break-all hover:text-gold`}>{settings.contact.email}</a>
+            </div>
+          </div>
         )}
       </div>
       <div>

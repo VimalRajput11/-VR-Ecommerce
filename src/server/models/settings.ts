@@ -22,6 +22,10 @@ export const DEFAULT_HOURS = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
   breaks: [],
 }));
 
+export const SALON_EMAIL = "vgunisexsalon@gmail.com";
+export const SALON_PHONE = "8800401064";
+export const SALON_MAP_URL = "https://maps.app.goo.gl/pcxn31d9EGdMWAgw6";
+
 const settingsSchema = new Schema(
   {
     _id: { type: String, default: "business" },
@@ -29,21 +33,21 @@ const settingsSchema = new Schema(
     ownerName: { type: String, default: "Varshika Rajput", maxlength: 100 },
     tagline: { type: String, default: "Your Style, Your Confidence.", maxlength: 160 },
     about: { type: String, maxlength: 3000, default: "" },
-    logoUrl: { type: String, default: "/logo.svg", maxlength: 500 },
+    logoUrl: { type: String, default: "/logo.png", maxlength: 500 },
     contact: {
-      phone: { type: String, default: "", maxlength: 20 },
-      whatsapp: { type: String, default: "", maxlength: 20 },
-      email: { type: String, default: "", maxlength: 200 },
+      phone: { type: String, default: SALON_PHONE, maxlength: 20 },
+      whatsapp: { type: String, default: SALON_PHONE, maxlength: 20 },
+      email: { type: String, default: SALON_EMAIL, maxlength: 200 },
       verified: { type: Boolean, default: false },
     },
     address: {
       line1: { type: String, default: "", maxlength: 200 },
-      locality: { type: String, default: "Bade Bazar, Old Rajendra Nagar", maxlength: 200 },
+      locality: { type: String, default: "Bada Bazar, Old Rajendra Nagar", maxlength: 200 },
       city: { type: String, default: "Delhi", maxlength: 80 },
       state: { type: String, default: "Delhi", maxlength: 80 },
       postalCode: { type: String, default: "", maxlength: 10 },
       country: { type: String, default: "India", maxlength: 60 },
-      mapUrl: { type: String, default: "", maxlength: 500 },
+      mapUrl: { type: String, default: SALON_MAP_URL, maxlength: 500 },
       verified: { type: Boolean, default: false },
     },
     socials: {

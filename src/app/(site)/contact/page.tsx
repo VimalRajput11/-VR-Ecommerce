@@ -7,7 +7,7 @@ import { getSiteSettings } from "@/server/queries/site";
 
 export const metadata: Metadata = {
   title: "Contact Us",
-  description: "Contact VG Unisex Salon in Bade Bazar, Old Rajendra Nagar, Delhi.",
+  description: "Contact VG Unisex Salon in Bada Bazar, Old Rajendra Nagar, Delhi.",
 };
 
 export default async function ContactPage() {

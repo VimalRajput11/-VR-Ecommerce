@@ -114,35 +114,40 @@ function ServicesAdmin() {
                 ) : (
                   <ul className="divide-y divide-beige">
                     {items.map((s) => (
-                      <li key={s.id} className="flex flex-wrap items-center gap-3 py-3">
-                        <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setEditing(s)}>
-                          <span className="font-medium hover:underline">{s.name}</span>
-                          <span className="ml-2 inline-flex flex-wrap gap-1 align-middle">
-                            {s.kind !== "service" && <Badge>{s.kind}</Badge>}
-                            {!s.active && <Badge className="bg-[#f3eeea] text-stone">Inactive</Badge>}
-                            {s.archived && <Badge className="bg-[#f3eeea] text-stone">Archived</Badge>}
-                            {!s.onlineBooking && <Badge>Not bookable online</Badge>}
-                            {s.featured && <Badge className="bg-[#f6efe4] text-gold-deep">Featured</Badge>}
-                          </span>
-                          <span className="block text-xs text-stone">
+                      // Phones: name/badges on top, price + actions on their own row. Wider screens: one row.
+                      <li key={s.id} className="flex flex-col gap-2 py-3 md:flex-row md:items-center md:gap-3">
+                        <button type="button" className="min-w-0 text-left md:flex-1" onClick={() => setEditing(s)}>
+                          <span className="block font-medium hover:underline">{s.name}</span>
+                          {(s.kind !== "service" || !s.active || s.archived || !s.onlineBooking || s.featured) && (
+                            <span className="mt-1 flex flex-wrap gap-1">
+                              {s.kind !== "service" && <Badge>{s.kind}</Badge>}
+                              {!s.active && <Badge className="bg-[#f3eeea] text-stone">Inactive</Badge>}
+                              {s.archived && <Badge className="bg-[#f3eeea] text-stone">Archived</Badge>}
+                              {!s.onlineBooking && <Badge>Not bookable online</Badge>}
+                              {s.featured && <Badge className="bg-[#f6efe4] text-gold-deep">Featured</Badge>}
+                            </span>
+                          )}
+                          <span className="mt-0.5 block text-xs text-stone">
                             {formatDuration(s.durationMin)}
                             {s.bufferMin ? ` + ${s.bufferMin} min buffer` : ""} · {s.audience}
                           </span>
                         </button>
-                        <span className="text-sm">
-                          {s.priceFrom ? "from " : ""}
-                          {formatINR(s.price)}
-                        </span>
-                        {s.priceVerified ? (
-                          <Badge className="bg-[#eef5ef] text-success">Price verified</Badge>
-                        ) : (
-                          <Button size="sm" variant="secondary" onClick={() => quick(s, { priceVerified: true }, `${s.name}: price verified`)}>
-                            <AlertTriangle size={14} className="text-warning" aria-hidden /> Verify price
+                        <div className="flex flex-wrap items-center gap-2 md:shrink-0 md:gap-3">
+                          <span className="mr-auto text-sm font-medium md:mr-0">
+                            {s.priceFrom ? "from " : ""}
+                            {formatINR(s.price)}
+                          </span>
+                          {s.priceVerified ? (
+                            <Badge className="bg-[#eef5ef] text-success">Price verified</Badge>
+                          ) : (
+                            <Button size="sm" variant="secondary" onClick={() => quick(s, { priceVerified: true }, `${s.name}: price verified`)}>
+                              <AlertTriangle size={14} className="text-warning" aria-hidden /> Verify price
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => quick(s, { active: !s.active }, s.active ? "Deactivated" : "Activated")}>
+                            {s.active ? "Deactivate" : "Activate"}
                           </Button>
-                        )}
-                        <Button size="sm" variant="ghost" onClick={() => quick(s, { active: !s.active }, s.active ? "Deactivated" : "Activated")}>
-                          {s.active ? "Deactivate" : "Activate"}
-                        </Button>
+                        </div>
                       </li>
                     ))}
                   </ul>

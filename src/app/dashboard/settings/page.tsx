@@ -273,7 +273,13 @@ function Settings() {
             <div className="space-y-3">
               {chk("notifications.email", "Email", integ.email ? "Email provider configured." : "Email provider not configured yet — messages are logged as skipped.")}
               {chk("notifications.sms", "SMS", "No SMS provider is connected yet.")}
-              {chk("notifications.whatsapp", "WhatsApp", "No WhatsApp Business provider is connected yet.")}
+              {chk(
+                "notifications.whatsapp",
+                "WhatsApp: send invoices automatically",
+                integ.whatsapp
+                  ? "WhatsApp Business API connected. Each new invoice is sent to the customer's mobile."
+                  : "WhatsApp Business API not connected yet. You can still send invoices and offers with the \"Send on WhatsApp\" buttons.",
+              )}
               {num("notifications.reminderHoursBefore", "Send reminders this many hours before", { min: 1, max: 72 })}
             </div>
             <p className="mt-3 text-xs text-stone">In-app notifications are always sent to customers with accounts. Customers can opt out of each channel from their profile.</p>

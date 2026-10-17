@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | VG Unisex Salon",
   },
   description:
-    "VG Unisex Salon in Bade Bazar, Old Rajendra Nagar, Delhi — haircuts, colour, men's grooming, skin care, nail care and occasion makeup. Book your appointment online.",
+    "VG Unisex Salon in Bada Bazar, Old Rajendra Nagar, Delhi — haircuts, colour, men's grooming, skin care, nail care and occasion makeup. Book your appointment online.",
   applicationName: "VG Unisex Salon",
   openGraph: {
     type: "website",

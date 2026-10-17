@@ -1,5 +1,6 @@
 import { api, json, readJson } from "@/server/lib/http";
-import { clearableStr, optPhone, optStr } from "@/server/lib/validate";
+import { clearableStr, email, optPhone, optStr } from "@/server/lib/validate";
+import { conflict } from "@/server/lib/errors";
 import { requireUser } from "@/server/auth/session";
 import { LoyaltyTransaction, User } from "@/server/models";
 import { getSettings } from "@/server/services/settings";
@@ -43,6 +44,12 @@ export const PATCH = api(async (req) => {
   const update: Record<string, unknown> = {};
   const name = optStr(body, "name", { min: 1, max: 100 });
   if (name) update.name = name;
+  // The owner manages sign-in emails, including their own; everyone else asks the owner/salon.
+  if (auth.role === "owner" && "email" in body) {
+    const mail = email(body);
+    if (await User.exists({ email: mail, isGuest: false, _id: { $ne: auth.id } })) throw conflict("Another account uses this email.");
+    update.email = mail;
+  }
   if ("phone" in body) update.phone = optPhone(body) ?? "";
   const prefs = clearableStr(body, "preferences", { max: 1000 });
   if (prefs !== undefined) update.preferences = prefs;

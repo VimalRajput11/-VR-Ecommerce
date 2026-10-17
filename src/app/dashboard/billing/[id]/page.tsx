@@ -7,6 +7,7 @@ import { apiFetch, ApiClientError, useApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import InvoiceView, { type InvoiceBusiness, type InvoiceData } from "@/components/billing/InvoiceView";
+import WhatsAppInvoiceCard from "@/components/billing/WhatsAppInvoiceCard";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { Alert, Button, Card, ErrorState, Input, Select, Spinner } from "@/components/ui";
 import { formatINR, paiseToRupees, rupeesToPaise } from "@/lib/money";
@@ -75,6 +76,7 @@ function InvoiceDetail({ id }: { id: string }) {
         <InvoiceView invoice={inv} business={data.business} />
         {can("billing.manage") && inv.status !== "void" && (
           <div className="no-print space-y-6">
+            <WhatsAppInvoiceCard invoiceId={inv.id} />
             {inv.balanceDue > 0 && (
               <Card title="Record payment">
                 {methods.length === 0 ? (

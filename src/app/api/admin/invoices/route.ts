@@ -3,8 +3,8 @@ import { dateKey, escapeRegex, int, isObjectId, objectId, optEmail, optInt, optS
 import { badRequest } from "@/server/lib/errors";
 import { requirePermission } from "@/server/auth/session";
 import { Invoice, type InvoiceDoc } from "@/server/models";
-import { addDaysToKey, istToUtc } from "@/lib/time";
-import { createInvoice, serialiseInvoice, type InvoiceInput } from "@/server/services/billing";
+import { addDaysToKey, dateKeyIST, istToUtc, minutesOfDayIST } from "@/lib/time";
+import { createInvoice, deleteAllInvoices, serialiseInvoice, type InvoiceInput } from "@/server/services/billing";
 
 export const GET = api(async (req) => {
   await requirePermission("billing.manage", "reports.view");
@@ -55,6 +55,14 @@ export const POST = api(async (req) => {
     loyaltyPoints: optInt(body, "loyaltyPoints", { min: 0, max: 1_000_000 }),
     notes: optStr(body, "notes", { max: 500 }),
   };
+  // Optional bill date (IST) for bills entered after the visit: not in the future, at most a year back.
+  if (body.billDate) {
+    const day = dateKey(body.billDate, "billDate");
+    const today = dateKeyIST();
+    if (day > today) throw badRequest("The bill date can't be in the future.", "billDate");
+    if (day < addDaysToKey(today, -365)) throw badRequest("The bill date can't be more than a year ago.", "billDate");
+    if (day !== today) input.issuedAt = istToUtc(day, minutesOfDayIST(new Date()));
+  }
   if (body.manualDiscount && typeof body.manualDiscount === "object") {
     const md = body.manualDiscount as Record<string, unknown>;
     const type = md.type === "percent" ? "percent" : "flat";
@@ -74,4 +82,12 @@ export const POST = api(async (req) => {
   }
   const invoice = await createInvoice(input, user);
   return json({ invoice: serialiseInvoice(invoice.toObject()) }, 201);
+});
+
+/** Owner only: delete every invoice (e.g. test bills before going live). Body must be { confirm: "DELETE" }. */
+export const DELETE = api(async (req) => {
+  const user = await requirePermission("billing.refund");
+  const body = await readJson(req);
+  if (body.confirm !== "DELETE") throw badRequest('Type DELETE to confirm.', "confirm");
+  return json(await deleteAllInvoices(user));
 });

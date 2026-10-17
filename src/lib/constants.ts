@@ -75,7 +75,7 @@ export const BRAND = {
   name: "VG Unisex Salon",
   short: "VG",
   owner: "Varshika Rajput",
-  locality: "Bade Bazar, Old Rajendra Nagar",
+  locality: "Bada Bazar, Old Rajendra Nagar",
   city: "Delhi",
   country: "India",
   tagline: "Your Style, Your Confidence.",

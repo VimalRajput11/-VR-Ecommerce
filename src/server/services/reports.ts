@@ -109,15 +109,35 @@ export async function salesByService({ from, to }: Range, limit = 20) {
   ]);
 }
 
+/**
+ * Most popular services in the period: services on bills (including walk-ins billed without an
+ * appointment) plus booked appointments that haven't been billed yet, so nothing is counted twice.
+ */
 export async function popularServices({ from, to }: Range, limit = 8) {
-  return Appointment.aggregate([
-    { $match: { start: { $gte: from, $lt: to }, status: { $nin: ["cancelled", "no_show"] } } },
-    { $unwind: "$items" },
-    { $group: { _id: "$items.name", count: { $sum: 1 } } },
-    { $sort: { count: -1 } },
-    { $limit: limit },
-    { $project: { _id: 0, name: "$_id", count: 1 } },
+  const [billed, booked] = await Promise.all([
+    Invoice.aggregate<{ _id: string; count: number }>([
+      { $match: { issuedAt: { $gte: from, $lt: to }, status: { $ne: "void" } } },
+      { $unwind: "$lines" },
+      { $match: { "lines.kind": "service" } },
+      { $group: { _id: "$lines.description", count: { $sum: "$lines.qty" } } },
+    ]),
+    Appointment.aggregate<{ _id: string; count: number }>([
+      { $match: { start: { $gte: from, $lt: to }, status: { $nin: ["cancelled", "no_show"] }, invoiceId: { $exists: false } } },
+      { $unwind: "$items" },
+      { $group: { _id: "$items.name", count: { $sum: 1 } } },
+    ]),
   ]);
+  const counts = new Map<string, number>();
+  for (const r of [...billed, ...booked]) counts.set(r._id, (counts.get(r._id) ?? 0) + r.count);
+  return [...counts]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit);
+}
+
+/** Bills made without an appointment (walk-in customers billed directly at the counter). */
+export async function walkInBills({ from, to }: Range) {
+  return Invoice.countDocuments({ issuedAt: { $gte: from, $lt: to }, status: { $ne: "void" }, appointmentId: { $exists: false } });
 }
 
 export async function staffWorkload({ from, to }: Range) {

@@ -17,7 +17,9 @@ interface Profile {
 
 export default function ProfileTab() {
   const { data, error, loading, reload } = useApi<{ profile: Profile }>("/api/account/profile");
-  const { refresh } = useAuth();
+  const { user, refresh } = useAuth();
+  const isStaff = !!user && user.role !== "customer";
+  const isOwner = user?.role === "owner";
   const toast = useToast();
   const [form, setForm] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
@@ -72,16 +74,29 @@ export default function ProfileTab() {
         <form onSubmit={save} className="space-y-4">
           {saveError && <Alert tone="error">{saveError.message}</Alert>}
           <Input label="Full name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} maxLength={100} />
-          <Input label="Email" value={form.email} disabled hint="Contact the salon to change your sign-in email." />
+          {isOwner ? (
+            <Input label="Email (sign-in)" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} maxLength={200} />
+          ) : (
+            <Input
+              label="Email"
+              value={form.email}
+              disabled
+              hint={isStaff ? "Ask the owner to change your sign-in email." : "Contact the salon to change your sign-in email."}
+            />
+          )}
           <Input label="Mobile number" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <Textarea label="Service preferences" rows={3} value={form.preferences} onChange={(e) => setForm({ ...form, preferences: e.target.value })} maxLength={1000} hint="e.g. preferred stylist, hair type, allergies" />
-          <fieldset className="space-y-2">
-            <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-stone">Booking updates</legend>
-            <Checkbox label="Email" checked={form.notificationPrefs.email} onChange={(e) => setForm({ ...form, notificationPrefs: { ...form.notificationPrefs, email: e.target.checked } })} />
-            <Checkbox label="SMS" checked={form.notificationPrefs.sms} onChange={(e) => setForm({ ...form, notificationPrefs: { ...form.notificationPrefs, sms: e.target.checked } })} />
-            <Checkbox label="WhatsApp" checked={form.notificationPrefs.whatsapp} onChange={(e) => setForm({ ...form, notificationPrefs: { ...form.notificationPrefs, whatsapp: e.target.checked } })} />
-          </fieldset>
-          <Checkbox label="Send me occasional offers" checked={form.marketingConsent} onChange={(e) => setForm({ ...form, marketingConsent: e.target.checked })} />
+          {!isStaff && (
+            <>
+              <Textarea label="Service preferences" rows={3} value={form.preferences} onChange={(e) => setForm({ ...form, preferences: e.target.value })} maxLength={1000} hint="e.g. preferred stylist, hair type, allergies" />
+              <fieldset className="space-y-2">
+                <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-stone">Booking updates</legend>
+                <Checkbox label="Email" checked={form.notificationPrefs.email} onChange={(e) => setForm({ ...form, notificationPrefs: { ...form.notificationPrefs, email: e.target.checked } })} />
+                <Checkbox label="SMS" checked={form.notificationPrefs.sms} onChange={(e) => setForm({ ...form, notificationPrefs: { ...form.notificationPrefs, sms: e.target.checked } })} />
+                <Checkbox label="WhatsApp" checked={form.notificationPrefs.whatsapp} onChange={(e) => setForm({ ...form, notificationPrefs: { ...form.notificationPrefs, whatsapp: e.target.checked } })} />
+              </fieldset>
+              <Checkbox label="Send me occasional offers" checked={form.marketingConsent} onChange={(e) => setForm({ ...form, marketingConsent: e.target.checked })} />
+            </>
+          )}
           <Button type="submit" loading={saving}>
             Save profile
           </Button>

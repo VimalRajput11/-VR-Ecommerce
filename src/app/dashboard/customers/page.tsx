@@ -7,7 +7,7 @@ import { Download } from "lucide-react";
 import { apiFetch, ApiClientError, qs, useApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
-import { Alert, Badge, Button, EmptyState, ErrorState, Input, Modal, PageHeader, Pagination, Spinner, Stat, StatusBadge, Table, Td, Textarea, Th, buttonClass } from "@/components/ui";
+import { Alert, Badge, Button, Checkbox, EmptyState, ErrorState, Input, Modal, PageHeader, Pagination, Spinner, Stat, StatusBadge, Table, Td, Textarea, Th, buttonClass } from "@/components/ui";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { formatINR } from "@/lib/money";
 import { formatDate } from "@/lib/time";
@@ -125,13 +125,20 @@ function CustomerModal({ id, onClose, onSaved }: { id: string | null; onClose: (
   const { can } = useAuth();
   const toast = useToast();
   const { data, error, loading } = useApi<Detail>(id ? `/api/admin/customers/${id}` : null);
-  const [form, setForm] = useState({ name: "", phone: "", email: "", preferences: "", internalNotes: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", preferences: "", internalNotes: "", marketingConsent: false });
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<ApiClientError | null>(null);
   const [loadedFrom, setLoadedFrom] = useState<typeof data>(null);
   if (data && data !== loadedFrom) {
     setLoadedFrom(data);
-    setForm({ name: data.customer.name, phone: data.customer.phone, email: data.customer.email, preferences: data.customer.preferences, internalNotes: data.customer.internalNotes ?? "" });
+    setForm({
+      name: data.customer.name,
+      phone: data.customer.phone,
+      email: data.customer.email,
+      preferences: data.customer.preferences,
+      internalNotes: data.customer.internalNotes ?? "",
+      marketingConsent: data.customer.marketingConsent,
+    });
   }
   const manage = can("customers.manage");
   const notesAllowed = data?.customer.internalNotes !== undefined;
@@ -178,9 +185,17 @@ function CustomerModal({ id, onClose, onSaved }: { id: string | null; onClose: (
             <Input label="Email" value={form.email} disabled={!manage} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             <Textarea label="Service preferences" wrapClassName="md:col-span-3" rows={2} value={form.preferences} disabled={!manage} onChange={(e) => setForm({ ...form, preferences: e.target.value })} />
             {notesAllowed && <Textarea label="Internal notes (staff only)" wrapClassName="md:col-span-3" rows={2} value={form.internalNotes} onChange={(e) => setForm({ ...form, internalNotes: e.target.value })} />}
+            {manage && (
+              <Checkbox
+                className="md:col-span-3"
+                label="Agreed to receive offers (WhatsApp / email)"
+                checked={form.marketingConsent}
+                onChange={(e) => setForm({ ...form, marketingConsent: e.target.checked })}
+              />
+            )}
           </div>
           <p className="text-xs text-stone">
-            {data.customer.isGuest ? "Guest profile" : "Registered account"} · since {formatDate(data.customer.createdAt)} · marketing consent: {data.customer.marketingConsent ? "yes" : "no"} · loyalty points: {data.customer.loyaltyPoints}
+            {data.customer.isGuest ? "Guest profile" : "Registered account"} · since {formatDate(data.customer.createdAt)} · loyalty points: {data.customer.loyaltyPoints}
           </p>
           <div className="grid gap-6 lg:grid-cols-2">
             <div>

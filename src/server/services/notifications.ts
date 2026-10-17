@@ -1,5 +1,5 @@
 import { Notification, User } from "@/server/models";
-import { getSettings } from "./settings";
+import { getSettings, salonEmail } from "./settings";
 import { formatDate, formatTime } from "@/lib/time";
 import { formatINR } from "@/lib/money";
 
@@ -31,7 +31,8 @@ async function sendEmail(to: string, subject: string, text: string): Promise<{ o
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [to], subject, text }),
+      // Customer replies go to the salon's inbox rather than the no-reply sending domain.
+      body: JSON.stringify({ from: process.env.EMAIL_FROM, to: [to], reply_to: salonEmail(await getSettings()), subject, text }),
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return { ok: false, error: `Email provider responded ${res.status}` };

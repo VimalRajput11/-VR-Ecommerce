@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { qs, useApi } from "@/lib/api";
+import { Trash2 } from "lucide-react";
+import { apiFetch, ApiClientError, qs, useApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { EmptyState, ErrorState, Input, PageHeader, Pagination, Select, Spinner, StatusBadge, Table, Td, Th, buttonClass } from "@/components/ui";
+import { useToast } from "@/context/ToastContext";
+import { Alert, Button, EmptyState, ErrorState, Input, Modal, PageHeader, Pagination, Select, Spinner, StatusBadge, Table, Td, Th, buttonClass } from "@/components/ui";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import type { InvoiceData } from "@/components/billing/InvoiceView";
 import { INVOICE_STATUS_LABELS } from "@/lib/constants";
@@ -19,8 +21,54 @@ export default function BillingPage() {
   );
 }
 
+function ClearInvoicesModal({ count, onClose, onDone }: { count: number; onClose: () => void; onDone: () => void }) {
+  const toast = useToast();
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<ApiClientError | null>(null);
+
+  async function clearAll() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiFetch<{ deleted: number }>("/api/admin/invoices", { method: "DELETE", body: { confirm } });
+      toast(`Deleted ${res.deleted} invoice${res.deleted === 1 ? "" : "s"}.`);
+      onDone();
+      onClose();
+    } catch (e) {
+      setError(e as ApiClientError);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Delete all invoices?"
+      footer={
+        <Button variant="danger" disabled={confirm !== "DELETE"} loading={busy} onClick={clearAll}>
+          Delete all invoices
+        </Button>
+      }
+    >
+      {error && <Alert tone="error" className="mb-4">{error.message}</Alert>}
+      <div className="space-y-3 text-sm">
+        <p>
+          This permanently deletes <strong>all {count} invoice{count === 1 ? "" : "s"}</strong> with their payments, coupon uses and loyalty points
+          earned on them. Revenue reports and customer spend go back to zero and invoice numbers restart from 00001.
+        </p>
+        <p className="font-medium text-danger">This can&apos;t be undone.</p>
+        <Input label='Type "DELETE" to confirm' value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
+      </div>
+    </Modal>
+  );
+}
+
 function Billing() {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
+  const [clearing, setClearing] = useState(false);
   const [filters, setFiltersRaw] = useState({ q: "", status: "", from: "", to: "" });
   const [page, setPage] = useState(1);
   const setFilters = (f: typeof filters) => {
@@ -34,13 +82,21 @@ function Billing() {
         title="Billing"
         description="Invoices, payments and receipts."
         actions={
-          can("billing.manage") && (
-            <Link href="/dashboard/billing/new" className={buttonClass("primary")}>
-              New bill
-            </Link>
-          )
+          <div className="flex flex-wrap gap-2">
+            {user?.role === "owner" && !!data?.total && !filters.q && !filters.status && !filters.from && !filters.to && (
+              <Button variant="secondary" onClick={() => setClearing(true)}>
+                <Trash2 size={16} aria-hidden /> Clear all
+              </Button>
+            )}
+            {can("billing.manage") && (
+              <Link href="/dashboard/billing/new" className={buttonClass("primary")}>
+                New bill
+              </Link>
+            )}
+          </div>
         }
       />
+      {clearing && <ClearInvoicesModal count={data?.total ?? 0} onClose={() => setClearing(false)} onDone={reload} />}
       <div className="mb-4 grid gap-3 rounded-lg border border-beige bg-white p-4 sm:grid-cols-4">
         <Input label="Search" placeholder="Invoice no., name, phone" value={filters.q} onChange={(e) => setFilters({ ...filters, q: e.target.value })} />
         <Select label="Status" value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}>
