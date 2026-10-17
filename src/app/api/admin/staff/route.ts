@@ -12,9 +12,9 @@ export const GET = api(async () => {
   // Anyone who books or bills needs the stylist list; full profiles need staff.manage.
   const user = await requirePermission("staff.manage", "appointments.manage", "appointments.view_all", "availability.own");
   const filter = user.permissions.includes("staff.manage")
-    ? { role: { $in: ["owner", "receptionist", "stylist"] } }
+    ? { role: { $in: ["owner", "receptionist", "stylist"] }, deletedAt: { $exists: false } }
     : user.permissions.includes("appointments.view_all") || user.permissions.includes("appointments.manage")
-      ? { role: { $in: ["owner", "receptionist", "stylist"] }, active: true }
+      ? { role: { $in: ["owner", "receptionist", "stylist"] }, active: true, deletedAt: { $exists: false } }
       : { _id: user.id };
   const staff = await User.find(filter).sort({ role: 1, name: 1 }).lean<UserDoc[]>();
   const full = user.permissions.includes("staff.manage");

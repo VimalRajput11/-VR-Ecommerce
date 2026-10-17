@@ -11,7 +11,8 @@ export async function getSettings(): Promise<Settings> {
     { $setOnInsert: { _id: "business" } },
     { upsert: true, new: true, setDefaultsOnInsert: true },
   ).lean();
-  return doc as Settings;
+  // Fill in defaults for settings added after this document was created (saved values are kept).
+  return BusinessSettings.hydrate(doc!).toObject() as Settings;
 }
 
 export function onlinePaymentsConfigured(): boolean {

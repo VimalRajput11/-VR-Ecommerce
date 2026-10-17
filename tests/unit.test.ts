@@ -1,7 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { computeSlots, lockBlocks, summariseServices } from "../src/server/services/availability-core";
-import { computeTotals, couponDiscount, deriveInvoiceStatus, loyaltyPointsFor } from "../src/server/services/billing-core";
+import { allocationError, computeTotals, couponDiscount, deriveInvoiceStatus, loyaltyPointsFor, membershipLineDiscounts, planPayments } from "../src/server/services/billing-core";
 import { dateKeyIST, formatDate, formatTime, istToUtc, minutesOfDayIST, isValidDateKey, addDaysToKey } from "../src/lib/time";
 import { formatINR } from "../src/lib/money";
 import { permissionsFor } from "../src/lib/permissions";
@@ -91,7 +91,7 @@ describe("availability engine", () => {
 describe("billing maths", () => {
   test("exclusive tax applied after discount", () => {
     const t = computeTotals({ lines: [{ amount: 100000 }], discount: 10000, tax: { enabled: true, rateBps: 1800 } });
-    assert.deepEqual(t, { subtotal: 100000, discountTotal: 10000, taxAmount: 16200, total: 106200 });
+    assert.deepEqual(t, { subtotal: 100000, discountTotal: 10000, taxAmount: 16200, total: 106200, taxableAmount: 90000 });
   });
   test("inclusive tax is extracted, total unchanged", () => {
     const t = computeTotals({ lines: [{ amount: 118000 }], discount: 0, tax: { enabled: true, rateBps: 1800, inclusive: true } });
@@ -173,5 +173,64 @@ describe("permissions & validation", () => {
     assert.ok(!canTransition("completed", "cancelled"));
     assert.ok(!canTransition("cancelled", "confirmed"));
     assert.ok(!canTransition("pending", "completed"));
+  });
+});
+
+describe("POS billing rules", () => {
+  test("staff allocations", () => {
+    assert.equal(allocationError([], true), null);
+    assert.equal(allocationError([{ staffId: "a", percent: 100 }], true), null);
+    assert.equal(allocationError([{ staffId: "a", percent: 60 }, { staffId: "b", percent: 40 }], true), null);
+    assert.match(allocationError([{ staffId: "a", percent: 60 }], true)!, /100%/);
+    assert.equal(allocationError([{ staffId: "a", percent: 60 }], false), null);
+    assert.match(allocationError([{ staffId: "a", percent: 70 }, { staffId: "b", percent: 40 }], false)!, /more than 100%/);
+    assert.match(allocationError([{ staffId: "a", percent: 50 }, { staffId: "a", percent: 50 }], true)!, /twice/);
+    assert.match(allocationError([{ staffId: "a", percent: 0 }], false)!, /between 1 and 100/);
+    assert.match(allocationError([{ staffId: "a", percent: 33.5 }], false)!, /whole/);
+  });
+  test("membership discounts apply per line type", () => {
+    const lines = [
+      { kind: "service", amount: 50000 },
+      { kind: "product", amount: 20000 },
+      { kind: "giftcard", amount: 100000 },
+    ];
+    assert.deepEqual(membershipLineDiscounts(lines, { servicePercent: 10, productPercent: 5 }), [5000, 1000, 0]);
+    assert.deepEqual(membershipLineDiscounts(lines, null), [0, 0, 0]);
+    assert.deepEqual(membershipLineDiscounts(lines, { servicePercent: 150, productPercent: -5 }), [50000, 0, 0]);
+  });
+  test("split payments, partial payments and change", () => {
+    // ₹1,000 bill: ₹400 cash + ₹600 UPI settles it exactly.
+    assert.deepEqual(planPayments(100000, [{ method: "cash", amount: 40000 }, { method: "upi", amount: 60000 }]), {
+      applied: [{ method: "cash", amount: 40000 }, { method: "upi", amount: 60000 }],
+      paid: 100000,
+      change: 0,
+      remaining: 0,
+    });
+    // ₹1,000 bill, ₹700 paid → ₹300 remaining.
+    assert.equal(planPayments(100000, [{ method: "upi", amount: 70000 }]).remaining, 30000);
+    // Cash over the balance gives change; only the needed cash is recorded.
+    const cash = planPayments(100000, [{ method: "upi", amount: 50000 }, { method: "cash", amount: 60000 }]);
+    assert.equal(cash.change, 10000);
+    assert.equal(cash.paid, 100000);
+    assert.deepEqual(cash.applied[1], { method: "cash", amount: 50000 });
+    // Non-cash may never exceed what is due; amounts must be positive whole paise.
+    assert.throws(() => planPayments(100000, [{ method: "card", amount: 100001 }]), /can't be more/);
+    assert.throws(() => planPayments(100000, [{ method: "cash", amount: 0 }]), /greater than zero/);
+    assert.throws(() => planPayments(100000, [{ method: "cash", amount: -5 }]), /greater than zero/);
+    assert.equal(planPayments(100000, []).remaining, 100000);
+  });
+});
+
+describe("billing permissions", () => {
+  test("receptionists bill and collect; stylists don't; refunds and payroll stay with the owner", () => {
+    const rec = permissionsFor("receptionist");
+    const sty = permissionsFor("stylist");
+    const own = permissionsFor("owner");
+    assert.ok(rec.includes("billing.manage") && rec.includes("customers.view"));
+    assert.ok(!rec.includes("billing.refund") && !rec.includes("payroll.manage") && !rec.includes("offers.manage"));
+    assert.ok(!sty.includes("billing.manage") && !sty.includes("customers.view"));
+    assert.ok(own.includes("billing.refund") && own.includes("payroll.manage") && own.includes("offers.manage"));
+    // Payroll can't be granted to staff as an extra permission.
+    assert.ok(!permissionsFor("receptionist", ["payroll.manage", "billing.refund"]).includes("payroll.manage"));
   });
 });

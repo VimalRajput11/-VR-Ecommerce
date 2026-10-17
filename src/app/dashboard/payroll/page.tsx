@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { apiFetch, ApiClientError, qs, useApi } from "@/lib/api";
 import { useToast } from "@/context/ToastContext";
+import { useConfirm } from "@/context/ConfirmContext";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { Alert, Badge, Button, Card, EmptyState, ErrorState, Input, Modal, PageHeader, Select, Spinner, Stat, Table, Td, Textarea, Th } from "@/components/ui";
 import { formatINR, paiseToRupees, rupeesToPaise } from "@/lib/money";
@@ -270,6 +271,7 @@ function EntryForm({ userId, month, initialType = "payment", initialAmount, onSa
 /** One employee: pay terms, the month's breakdown, add records, and full history. */
 function EmployeeModal({ userId, month, onClose, onChanged }: { userId: string; month: string; onClose: () => void; onChanged: () => void }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const { data, error, loading, reload } = useApi<{ staff: { id: string; name: string; role: string }; month: string; profile: Profile; statement: Row | null; entries: Entry[] }>(
     `/api/admin/payroll/${userId}${qs({ month })}`,
   );
@@ -319,7 +321,17 @@ function EmployeeModal({ userId, month, onClose, onChanged }: { userId: string; 
   }
 
   async function remove(e: Entry) {
-    if (!window.confirm(`Delete this ${TYPE_LABELS[e.type].toLowerCase()} of ${formatINR(e.amount)}?`)) return;
+    const ok = await confirm({
+      title: "Delete this record?",
+      danger: true,
+      confirmLabel: "Delete",
+      message: (
+        <p>
+          {TYPE_LABELS[e.type]} of <strong>{formatINR(e.amount)}</strong> on {formatDateKey(e.date)}. The balance for {monthLabel(e.month)} will be recalculated.
+        </p>
+      ),
+    });
+    if (!ok) return;
     try {
       await apiFetch(`/api/admin/payroll/entries/${e.id}`, { method: "DELETE" });
       toast("Record deleted.");

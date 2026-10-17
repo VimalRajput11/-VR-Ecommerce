@@ -220,6 +220,13 @@ function Settings() {
               {chk("payments.online", "Online payments via Razorpay", integ.onlinePayments ? "Gateway keys detected." : "Requires RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET on the server — stays off until configured.")}
             </div>
           </Card>
+          <Card title="Billing rules">
+            <div className="space-y-3">
+              {chk("billing.allowPartialPayment", "Allow finalizing a bill that is not fully paid", "The unpaid part stays on the invoice as balance due. Gift cards, advances and memberships always need full payment.")}
+              {chk("billing.requireFullAllocation", "Every service must have staff adding up to 100%", "Turn on to make sure all service sales count towards someone's commission.")}
+              {num("billing.giftCardValidityMonths", "Gift cards valid for (months, 0 = no expiry)", { min: 0, max: 120 })}
+            </div>
+          </Card>
           <Card title="Tax">
             <div className="space-y-3">
               {chk("tax.enabled", "Charge tax on invoices", "Confirm your GST registration and rate with your accountant.")}

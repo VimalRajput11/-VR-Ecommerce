@@ -45,6 +45,10 @@ const userSchema = new Schema(
     },
 
     preferences: { type: String, maxlength: 1000 },
+    birthday: { type: String, maxlength: 10 }, // YYYY-MM-DD (year may be a placeholder if unknown)
+    gender: { type: String, enum: ["female", "male", "other", ""] },
+    // Prepaid customer credit (paise). Changed only together with an AdvanceTransaction record.
+    advanceBalance: { type: Number, default: 0, min: 0 },
     internalNotes: { type: String, maxlength: 2000 },
     marketingConsent: { type: Boolean, default: false },
     notificationPrefs: {
@@ -56,6 +60,9 @@ const userSchema = new Schema(
     firstVisitAt: Date,
     lastVisitAt: Date,
     lastLoginAt: Date,
+    // Staff removed by the owner but kept (without email or password) because bills, appointments or
+    // payroll records still name them. Hidden from staff lists; can never sign in again.
+    deletedAt: Date,
   },
   { timestamps: true },
 );

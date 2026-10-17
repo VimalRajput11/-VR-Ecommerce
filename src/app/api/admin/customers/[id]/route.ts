@@ -5,6 +5,7 @@ import { requirePermission } from "@/server/auth/session";
 import { Appointment, Invoice, User, type AppointmentDoc } from "@/server/models";
 import { staffNameMap } from "@/server/services/booking";
 import { audit } from "@/server/services/audit";
+import { deleteCustomer } from "@/server/services/customers-reset";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -86,4 +87,10 @@ export const PATCH = api<Ctx>(async (req, ctx) => {
   if (!customer) throw notFound("Customer not found.");
   await audit(user, "customer.update", "User", String(id), `Updated customer ${customer.name}: ${Object.keys(set).join(", ")}`);
   return json({ ok: true });
+});
+
+/** Owner only: permanently delete this customer and their history. */
+export const DELETE = api<Ctx>(async (_req, ctx) => {
+  const user = await requirePermission("customers.manage");
+  return json(await deleteCustomer(objectId((await ctx.params).id), user));
 });

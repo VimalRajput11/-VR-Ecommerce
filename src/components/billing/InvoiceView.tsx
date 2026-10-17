@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { formatINR } from "@/lib/money";
@@ -12,7 +12,7 @@ export interface InvoiceData {
   id: string;
   number: string;
   customer: { name?: string | null; phone?: string | null; email?: string | null };
-  lines: { kind: string; description: string; qty: number; unitPrice: number; amount: number }[];
+  lines: { kind: string; description: string; qty: number; unitPrice: number; amount: number; discount?: number; giftCardCode?: string | null }[];
   subtotal: number;
   discounts: { kind: string; code?: string | null; description?: string | null; amount: number }[];
   discountTotal: number;
@@ -51,8 +51,29 @@ const noopSubscribe = () => () => {};
  * For printing, a copy is portalled to <body> and globals.css prints only that copy, so the page
  * around it (sidebar, header, footer) never adds extra pages.
  */
-export default function InvoiceView({ invoice, business }: { invoice: InvoiceData; business: InvoiceBusiness }) {
+export default function InvoiceView({ invoice, business, printMode = "a4" }: { invoice: InvoiceData; business: InvoiceBusiness; printMode?: "a4" | "thermal" }) {
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
+  const thermalRef = useRef<HTMLDivElement>(null);
+
+  // Thermal rolls are 80 mm wide and as long as the receipt. Browsers can't size a page "to fit",
+  // so measure the (off-screen) receipt and set the page size to match: one page, no blank sheet.
+  useEffect(() => {
+    const el = thermalRef.current;
+    if (printMode !== "thermal" || !mounted || !el) return;
+    const style = document.createElement("style");
+    const update = () => {
+      const mm = Math.ceil((el.getBoundingClientRect().height * 25.4) / 96) + 2;
+      style.textContent = `@page { size: 80mm ${mm}mm; margin: 0; }`;
+    };
+    update();
+    document.head.appendChild(style);
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      style.remove();
+    };
+  }, [printMode, mounted]);
 
   // Browsers name the saved PDF after the page title, so use the invoice instead of "Dashboard".
   useEffect(() => {
@@ -79,8 +100,8 @@ export default function InvoiceView({ invoice, business }: { invoice: InvoiceDat
       <InvoiceSheet invoice={invoice} business={business} />
       {mounted &&
         createPortal(
-          <div className="print-only">
-            <InvoiceSheet invoice={invoice} business={business} />
+          <div ref={thermalRef} className={printMode === "thermal" ? "print-only thermal-print" : "print-only"}>
+            {printMode === "thermal" ? <ThermalReceipt invoice={invoice} business={business} /> : <InvoiceSheet invoice={invoice} business={business} />}
           </div>,
           document.body,
         )}
@@ -147,7 +168,11 @@ function InvoiceSheet({ invoice, business }: { invoice: InvoiceData; business: I
           <tbody>
             {invoice.lines.map((l, i) => (
               <tr key={i} className="border-b border-beige/70">
-                <td className="px-3 py-3 font-medium">{l.description}</td>
+                <td className="px-3 py-3 font-medium">
+                  {l.description}
+                  {l.giftCardCode && <span className="block font-mono text-xs text-gold-deep">Card code: {l.giftCardCode}</span>}
+                  {!!l.discount && <span className="block text-xs font-normal text-success">Membership −{formatINR(l.discount)}</span>}
+                </td>
                 <td className="px-3 py-3 text-right text-stone">{l.qty}</td>
                 <td className="px-3 py-3 text-right text-stone">{formatINR(l.unitPrice)}</td>
                 <td className="px-3 py-3 text-right">{formatINR(l.amount)}</td>
@@ -236,5 +261,57 @@ function InvoiceSheet({ invoice, business }: { invoice: InvoiceData; business: I
         </footer>
       </div>
     </article>
+  );
+}
+
+function Row({ l, r, strong }: { l: string; r: string; strong?: boolean }) {
+  return (
+    <div className={`flex justify-between gap-2 ${strong ? "font-bold" : ""}`}>
+      <span>{l}</span>
+      <span className="whitespace-nowrap">{r}</span>
+    </div>
+  );
+}
+
+/** Narrow (80 mm) receipt for thermal printers: plain text layout, no backgrounds. */
+function ThermalReceipt({ invoice, business }: { invoice: InvoiceData; business: InvoiceBusiness }) {
+  const rate = (invoice.tax.rateBps ?? 0) / 100;
+  const paid = invoice.payments.filter((p) => p.kind === "payment");
+  return (
+    <div className="thermal-receipt text-[11px] leading-snug text-black">
+      <div className="text-center">
+        <Image src="/logo.png" alt="" width={56} height={56} loading="eager" className="mx-auto h-14 w-14" />
+        <p className="mt-1 text-sm font-bold">{business.name}</p>
+        {business.address && <p>{business.address}</p>}
+        {business.phone && <p>{formatPhone(business.phone)}</p>}
+        {business.gstin && <p>GSTIN: {business.gstin}</p>}
+      </div>
+      <div className="my-2 border-t border-dashed border-black" />
+      <Row l={invoice.status === "paid" ? "RECEIPT" : "INVOICE"} r={invoice.number} strong />
+      <Row l="Date" r={formatDateTime(invoice.issuedAt)} />
+      {invoice.customer.name && <Row l="Customer" r={invoice.customer.name} />}
+      <div className="my-2 border-t border-dashed border-black" />
+      {invoice.lines.map((l, i) => (
+        <div key={i} className="mb-1">
+          <p>{l.description}</p>
+          <Row l={`  ${l.qty} × ${formatINR(l.unitPrice)}`} r={formatINR(l.amount)} />
+          {l.giftCardCode && <p>  Code: {l.giftCardCode}</p>}
+        </div>
+      ))}
+      <div className="my-2 border-t border-dashed border-black" />
+      <Row l="Subtotal" r={formatINR(invoice.subtotal)} />
+      {invoice.discounts.map((d, i) => (
+        <Row key={i} l={`Discount${d.code ? ` ${d.code}` : ""}`} r={`-${formatINR(d.amount)}`} />
+      ))}
+      {(invoice.tax.amount ?? 0) > 0 && <Row l={`${invoice.tax.name ?? "Tax"} ${rate}%${invoice.tax.inclusive ? " (incl.)" : ""}`} r={formatINR(invoice.tax.amount ?? 0)} />}
+      <Row l="TOTAL" r={formatINR(invoice.total)} strong />
+      {paid.map((p, i) => (
+        <Row key={i} l={`Paid (${PAYMENT_METHOD_LABELS[p.method as PaymentMethod] ?? p.method})`} r={formatINR(p.amount)} />
+      ))}
+      {invoice.amountRefunded > 0 && <Row l="Refunded" r={`-${formatINR(invoice.amountRefunded)}`} />}
+      <Row l="Balance due" r={formatINR(invoice.balanceDue)} strong />
+      <div className="my-2 border-t border-dashed border-black" />
+      <p className="text-center">{business.footerNote || `Thank you for visiting ${business.name}!`}</p>
+    </div>
   );
 }

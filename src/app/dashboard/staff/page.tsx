@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { apiFetch, ApiClientError, useApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { useConfirm } from "@/context/ConfirmContext";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { HoursEditor, TimeOffPanel, type Break, type DayHours } from "@/components/dashboard/StaffForms";
 import { Alert, Badge, Button, Card, Checkbox, EmptyState, ErrorState, Input, Modal, PageHeader, Select, Spinner, Textarea } from "@/components/ui";
@@ -88,6 +90,8 @@ function StaffAdmin() {
 function StaffModal({ staff, onClose, onSaved }: { staff: Staff | null; onClose: () => void; onSaved: () => void }) {
   const { user } = useAuth();
   const toast = useToast();
+  const confirm = useConfirm();
+  const [removing, setRemoving] = useState(false);
   const services = useApi<{ services: { id: string; name: string; archived: boolean }[] }>("/api/admin/services");
   const [f, setF] = useState({
     name: staff?.name ?? "",
@@ -108,6 +112,38 @@ function StaffModal({ staff, onClose, onSaved }: { staff: Staff | null; onClose:
   const [error, setError] = useState<ApiClientError | null>(null);
   const isOwner = staff?.role === "owner";
   const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+  // Owner only: remove an employee for good (they can't sign in again).
+  async function remove() {
+    if (!staff) return;
+    const ok = await confirm({
+      title: `Delete ${staff.name}?`,
+      danger: true,
+      confirmLabel: "Delete employee",
+      message: (
+        <>
+          <p>
+            <strong>{staff.name}</strong> will be signed out and won&apos;t be able to sign in again. Their leave and working-hours settings are removed.
+          </p>
+          <p>Past appointments, bills and payroll records keep their name, so your history and reports stay correct.</p>
+          <p className="font-medium text-danger">This can&apos;t be undone. To pause someone instead, untick &quot;Active&quot;.</p>
+        </>
+      ),
+    });
+    if (!ok) return;
+    setRemoving(true);
+    setError(null);
+    try {
+      await apiFetch(`/api/admin/staff/${staff.id}`, { method: "DELETE" });
+      toast(`${staff.name} deleted.`);
+      onSaved();
+      onClose();
+    } catch (e) {
+      setError(e as ApiClientError);
+    } finally {
+      setRemoving(false);
+    }
+  }
 
   async function save() {
     setBusy(true);
@@ -153,9 +189,16 @@ function StaffModal({ staff, onClose, onSaved }: { staff: Staff | null; onClose:
       title={staff ? `Edit ${staff.name}` : "Add staff member"}
       size="lg"
       footer={
-        <Button onClick={save} loading={busy}>
-          Save
-        </Button>
+        <>
+          {staff && !isOwner && user?.role === "owner" && staff.id !== user.id && (
+            <Button variant="ghost" className="mr-auto text-danger" loading={removing} onClick={remove}>
+              <Trash2 size={16} aria-hidden /> Delete employee
+            </Button>
+          )}
+          <Button onClick={save} loading={busy}>
+            Save
+          </Button>
+        </>
       }
     >
       {error && <Alert tone="error" className="mb-4">{error.message}</Alert>}

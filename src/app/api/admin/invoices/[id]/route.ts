@@ -46,7 +46,7 @@ export const POST = api<Ctx>(async (req, ctx) => {
       id,
       {
         amount: int(body, "amount", { min: 1, max: 100_000_000, label: "Amount" }),
-        method: oneOf(body, "method", ["cash", "upi", "card", "online"] as const),
+        method: oneOf(body, "method", ["cash", "upi", "card", "online", "advance"] as const),
         reason: str(body, "reason", { max: 300, label: "Refund reason" }),
       },
       user,

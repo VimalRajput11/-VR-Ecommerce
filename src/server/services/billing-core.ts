@@ -30,7 +30,7 @@ export function computeTotals({ lines, discount, tax }: TotalsInput) {
       total += taxAmount;
     }
   }
-  return { subtotal, discountTotal, taxAmount, total: Math.max(0, total) };
+  return { subtotal, discountTotal, taxAmount, total: Math.max(0, total), taxableAmount: rate > 0 ? Math.max(0, taxableBase) : 0 };
 }
 
 export interface CouponRule {
@@ -76,4 +76,80 @@ export function deriveInvoiceStatus(inv: { status?: string | null; total: number
 
 export function loyaltyPointsFor(paidPaise: number, pointsPer100: number) {
   return Math.floor(paidPaise / 10_000) * Math.max(0, pointsPer100);
+}
+
+// ---------------------------------------------------------------- POS rules
+// Shared by the billing screen (instant preview) and the server (authoritative check).
+
+export interface Allocation {
+  staffId: string;
+  percent: number;
+}
+
+/**
+ * Staff split for one service line. Each person once, whole percentages 1–100, never over 100%.
+ * When `requireFull` is set (salon setting), a line that has any allocation must total exactly 100%.
+ * Returns an error message, or null when valid.
+ */
+export function allocationError(allocations: Allocation[], requireFull: boolean): string | null {
+  if (!allocations.length) return null;
+  const ids = new Set<string>();
+  let total = 0;
+  for (const a of allocations) {
+    if (!Number.isInteger(a.percent) || a.percent < 1 || a.percent > 100) return "Each staff share must be a whole percentage between 1 and 100.";
+    if (ids.has(a.staffId)) return "The same staff member is listed twice on one service.";
+    ids.add(a.staffId);
+    total += a.percent;
+  }
+  if (total > 100) return "Staff shares on a service can't add up to more than 100%.";
+  if (requireFull && total !== 100) return "Staff shares on each service must add up to 100%.";
+  return null;
+}
+
+export interface MembershipBenefit {
+  servicePercent: number;
+  productPercent: number;
+}
+
+/** Membership discount per line (0 for lines the membership doesn't cover). */
+export function membershipLineDiscounts(lines: { kind: string; amount: number }[], m: MembershipBenefit | null): number[] {
+  return lines.map((l) => {
+    if (!m) return 0;
+    const pct = l.kind === "service" ? m.servicePercent : l.kind === "product" ? m.productPercent : 0;
+    return Math.round((l.amount * Math.max(0, Math.min(100, pct))) / 100);
+  });
+}
+
+export const CASH_LIKE = ["cash"] as const;
+
+export interface TenderInput {
+  method: string;
+  amount: number;
+}
+
+/**
+ * Splits the tendered payments against the amount due. Only cash may exceed what is owed (the
+ * excess is change to hand back); any other method over the balance is an error.
+ */
+export function planPayments(due: number, tenders: TenderInput[]) {
+  for (const t of tenders) {
+    if (!Number.isInteger(t.amount) || t.amount <= 0) throw new Error("Each payment amount must be greater than zero.");
+  }
+  const nonCash = tenders.filter((t) => t.method !== "cash").reduce((s, t) => s + t.amount, 0);
+  if (nonCash > due) throw new Error("Card, UPI, advance and gift card payments can't be more than the amount due.");
+  let room = due - nonCash;
+  const applied: TenderInput[] = [];
+  let change = 0;
+  for (const t of tenders) {
+    if (t.method !== "cash") {
+      applied.push({ ...t });
+      continue;
+    }
+    const use = Math.min(t.amount, room);
+    room -= use;
+    change += t.amount - use;
+    if (use > 0) applied.push({ method: t.method, amount: use });
+  }
+  const paid = applied.reduce((s, t) => s + t.amount, 0);
+  return { applied, paid, change, remaining: due - paid };
 }

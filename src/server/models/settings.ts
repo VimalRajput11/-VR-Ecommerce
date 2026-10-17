@@ -105,6 +105,14 @@ const settingsSchema = new Schema(
       pointValuePaise: { type: Number, default: 100, min: 0 }, // value of 1 point when redeemed
       minRedeemPoints: { type: Number, default: 50, min: 0 },
     },
+    billing: {
+      // Staff shares on each service must add up to exactly 100% before a bill can be finalized.
+      requireFullAllocation: { type: Boolean, default: false },
+      // Allow finalizing a bill that is not fully paid (the rest stays as balance due).
+      allowPartialPayment: { type: Boolean, default: true },
+      // Months a gift card stays valid after it is sold (0 = no expiry).
+      giftCardValidityMonths: { type: Number, default: 12, min: 0, max: 120 },
+    },
     discounts: {
       receptionistMaxPercent: { type: Number, default: 10, min: 0, max: 100 },
     },

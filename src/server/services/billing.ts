@@ -3,6 +3,10 @@ import {
   Appointment,
   Coupon,
   CouponRedemption,
+  AdvanceTransaction,
+  BusinessSettings,
+  CustomerMembership,
+  MembershipPlan,
   Counter,
   Invoice,
   LoyaltyTransaction,
@@ -18,7 +22,7 @@ import type { PaymentMethod } from "@/lib/constants";
 import { badRequest, conflict, forbidden, notFound } from "@/server/lib/errors";
 import { dateKeyIST } from "@/lib/time";
 import { formatINR } from "@/lib/money";
-import { computeTotals, couponDiscount, deriveInvoiceStatus, loyaltyPointsFor } from "./billing-core";
+import { allocationError, computeTotals, couponDiscount, deriveInvoiceStatus, loyaltyPointsFor, membershipLineDiscounts } from "./billing-core";
 import { getSettings, salonEmail, salonPhone, type Settings } from "./settings";
 import { resolveCustomer, type CustomerInput } from "./booking";
 import { adjustStock } from "./inventory";
@@ -39,7 +43,9 @@ export async function nextInvoiceNumber(prefix: string): Promise<string> {
 export interface InvoiceInput {
   appointmentId?: Types.ObjectId;
   customer?: CustomerInput;
-  services?: { serviceId: Types.ObjectId; qty: number }[];
+  services?: { serviceId: Types.ObjectId; qty: number; allocations?: { staffId: Types.ObjectId; percent: number }[] }[];
+  /** Staff split for each appointment item, by position; defaults to the appointment's stylist. */
+  appointmentAllocations?: ({ staffId: Types.ObjectId; percent: number }[] | null)[];
   products?: { productId: Types.ObjectId; qty: number }[];
   customLines?: { description: string; amount: number }[];
   couponCode?: string;
@@ -50,17 +56,50 @@ export interface InvoiceInput {
   issuedAt?: Date;
   /** Who did the services on a walk-in bill (appointments already know their stylist). */
   staffId?: Types.ObjectId;
+  /** Gift cards, advance deposits and memberships sold on this bill (fulfilled once fully paid). */
+  giftCards?: { amount: number }[];
+  advances?: { amount: number }[];
+  memberships?: { planId: Types.ObjectId }[];
+  /** Key for one finalize attempt; a retry with the same key returns the same invoice. */
+  idempotencyKey?: string;
 }
 
-type Line = { kind: "service" | "product" | "custom"; refId?: Types.ObjectId; description: string; qty: number; unitPrice: number; amount: number; taxable: boolean };
-type Discount = { kind: "coupon" | "manual" | "loyalty"; code?: string; description: string; amount: number; refId?: Types.ObjectId };
+export interface CreateInvoiceOptions {
+  /** Calculate everything and return it without saving or claiming anything (billing screen preview). */
+  dryRun?: boolean;
+  /** Last check before anything is saved, with the final totals (used to validate payments). */
+  beforePersist?: (ctx: { total: number; customerId: Types.ObjectId; lines: Line[] }) => Promise<void>;
+}
+
+type Allocations = { staffId: Types.ObjectId; percent: number }[];
+export type Line = {
+  kind: "service" | "product" | "custom" | "giftcard" | "advance" | "membership";
+  refId?: Types.ObjectId;
+  description: string;
+  qty: number;
+  unitPrice: number;
+  amount: number;
+  taxable: boolean;
+  discount?: number;
+  allocations?: Allocations;
+};
+type Discount = { kind: "membership" | "coupon" | "manual" | "loyalty"; code?: string; description: string; amount: number; refId?: Types.ObjectId };
+
+/** Lines that create something for the customer once the bill is paid in full. */
+export const FULFILMENT_KINDS = ["giftcard", "advance", "membership"] as const;
+
+/** The customer's membership that is valid today, if any. */
+export async function activeMembership(customerId: Types.ObjectId) {
+  const today = dateKeyIST();
+  return CustomerMembership.findOne({ customerId, status: "active", startsOn: { $lte: today }, endsOn: { $gte: today } }).sort({ endsOn: -1 }).lean();
+}
 
 async function isFirstVisit(customerId: Types.ObjectId) {
   const prior = await Invoice.countDocuments({ customerId, status: { $ne: "void" } });
   return prior === 0;
 }
 
-export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
+async function buildInvoice(input: InvoiceInput, actor: AuthUser, opts: CreateInvoiceOptions = {}) {
   const settings = await getSettings();
   const lines: Line[] = [];
   let customerId: Types.ObjectId;
@@ -78,14 +117,22 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
     const taxable = new Map(
       (await Service.find({ _id: { $in: appointment.items.map((i) => i.serviceId) } }).select("taxable").lean()).map((s) => [String(s._id), s.taxable !== false]),
     );
-    for (const item of appointment.items) {
-      lines.push({ kind: "service", refId: item.serviceId, description: item.name, qty: 1, unitPrice: item.price, amount: item.price, taxable: taxable.get(String(item.serviceId)) ?? true });
-    }
+    const apptStaff = appointment.staffId;
+    appointment.items.forEach((item, i) => {
+      const allocations = input.appointmentAllocations?.[i] ?? [{ staffId: apptStaff, percent: 100 }];
+      lines.push({ kind: "service", refId: item.serviceId, description: item.name, qty: 1, unitPrice: item.price, amount: item.price, taxable: taxable.get(String(item.serviceId)) ?? true, allocations });
+    });
   } else {
-    if (!input.customer) throw badRequest("Customer details are required.", "customer");
-    const resolved = await resolveCustomer(input.customer);
-    customerId = resolved.id;
-    customer = resolved.snapshot;
+    if (!input.customer && opts.dryRun) {
+      // Price preview before a customer is chosen (no membership or per-customer limits apply yet).
+      customerId = new Types.ObjectId();
+      customer = { name: "" };
+    } else {
+      if (!input.customer) throw badRequest("Customer details are required.", "customer");
+      const resolved = opts.dryRun && !input.customer.userId ? { id: (await User.findOne({ phone: input.customer.phone, isGuest: true }).select("_id").lean())?._id ?? new Types.ObjectId(), snapshot: input.customer } : await resolveCustomer(input.customer);
+      customerId = resolved.id as Types.ObjectId;
+      customer = { name: resolved.snapshot.name, phone: resolved.snapshot.phone, email: resolved.snapshot.email };
+    }
   }
 
   if (input.services?.length) {
@@ -93,7 +140,8 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
     for (const req of input.services) {
       const svc = docs.find((d) => d._id.equals(req.serviceId));
       if (!svc) throw badRequest("A selected service was not found.", "services");
-      lines.push({ kind: "service", refId: svc._id, description: svc.name, qty: req.qty, unitPrice: svc.price, amount: svc.price * req.qty, taxable: svc.taxable !== false });
+      const allocations = req.allocations?.length ? req.allocations : input.staffId ? [{ staffId: input.staffId, percent: 100 }] : [];
+      lines.push({ kind: "service", refId: svc._id, description: svc.name, qty: req.qty, unitPrice: svc.price, amount: svc.price * req.qty, taxable: svc.taxable !== false, allocations });
     }
   }
 
@@ -111,12 +159,57 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
   for (const c of input.customLines ?? []) {
     lines.push({ kind: "custom", description: c.description, qty: 1, unitPrice: c.amount, amount: c.amount, taxable: true });
   }
+
+  // Stored value and memberships sold at the counter. Gift cards and advances are prepayments, so
+  // they are not taxed as sales; memberships follow the normal tax setting.
+  for (const g of input.giftCards ?? []) {
+    lines.push({ kind: "giftcard", description: "Gift card", qty: 1, unitPrice: g.amount, amount: g.amount, taxable: false });
+  }
+  for (const a of input.advances ?? []) {
+    lines.push({ kind: "advance", description: "Advance deposit", qty: 1, unitPrice: a.amount, amount: a.amount, taxable: false });
+  }
+  if (input.memberships?.length) {
+    const plans = await MembershipPlan.find({ _id: { $in: input.memberships.map((m) => m.planId) }, active: true }).lean();
+    for (const m of input.memberships) {
+      const plan = plans.find((p) => p._id.equals(m.planId));
+      if (!plan) throw badRequest("A selected membership plan is not available.", "memberships");
+      lines.push({ kind: "membership", refId: plan._id, description: `Membership: ${plan.name}`, qty: 1, unitPrice: plan.price, amount: plan.price, taxable: true });
+    }
+  }
   if (!lines.length) throw badRequest("Add at least one item to the bill.", "lines");
+
+  // Staff split on each service: valid shares, real staff members, 100% when the salon requires it.
+  // Only when the owner has switched this on in Settings: read the saved value itself, never a default.
+  const savedRule = await BusinessSettings.findById("business").select("billing.requireFullAllocation").lean<{ billing?: { requireFullAllocation?: boolean } }>();
+  const requireFull = savedRule?.billing?.requireFullAllocation === true;
+  const staffIds = [...new Set(lines.flatMap((l) => l.allocations ?? []).map((a) => String(a.staffId)))];
+  if (staffIds.length) {
+    const found = await User.countDocuments({ _id: { $in: staffIds }, role: { $in: ["owner", "receptionist", "stylist"] } });
+    if (found !== staffIds.length) throw badRequest("A selected staff member was not found.", "allocations");
+  }
+  for (const l of lines.filter((x) => x.kind === "service")) {
+    const allocs = l.allocations ?? [];
+    if (requireFull && !allocs.length) throw badRequest(`Choose who did "${l.description}".`, "allocations");
+    const err = allocationError(allocs.map((a) => ({ staffId: String(a.staffId), percent: a.percent })), requireFull);
+    if (err) throw badRequest(`${l.description}: ${err}`, "allocations");
+  }
 
   const subtotal = lines.reduce((s, l) => s + l.amount, 0);
   const discounts: Discount[] = [];
   let remaining = subtotal;
   const undo: (() => Promise<unknown>)[] = [];
+
+  // 0. Membership benefits (applied automatically, per line).
+  const membership = await activeMembership(customerId);
+  if (membership) {
+    const perLine = membershipLineDiscounts(lines, { servicePercent: membership.servicePercent ?? 0, productPercent: membership.productPercent ?? 0 });
+    perLine.forEach((d, i) => (lines[i].discount = d));
+    const amount = Math.min(perLine.reduce((sum, d) => sum + d, 0), remaining);
+    if (amount > 0) {
+      discounts.push({ kind: "membership", description: `${membership.name} membership`, amount, refId: membership._id });
+      remaining -= amount;
+    }
+  }
 
   try {
     // 1. Coupon
@@ -140,13 +233,15 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
         throw badRequest((e as Error).message, "couponCode");
       }
       amount = Math.min(amount, remaining);
-      // Atomically claim one redemption so limits hold under concurrency.
-      const claimed = await Coupon.findOneAndUpdate(
-        { _id: coupon._id, $or: [{ maxRedemptions: 0 }, { $expr: { $lt: ["$redemptions", "$maxRedemptions"] } }] },
-        { $inc: { redemptions: 1 } },
-      );
-      if (!claimed) throw badRequest("This coupon has been fully redeemed.", "couponCode");
-      undo.push(() => Coupon.updateOne({ _id: coupon._id }, { $inc: { redemptions: -1 } }));
+      if (!opts.dryRun) {
+        // Atomically claim one redemption so limits hold under concurrency.
+        const claimed = await Coupon.findOneAndUpdate(
+          { _id: coupon._id, $or: [{ maxRedemptions: 0 }, { $expr: { $lt: ["$redemptions", "$maxRedemptions"] } }] },
+          { $inc: { redemptions: 1 } },
+        );
+        if (!claimed) throw badRequest("This coupon has been fully redeemed.", "couponCode");
+        undo.push(() => Coupon.updateOne({ _id: coupon._id }, { $inc: { redemptions: -1 } }));
+      }
       couponId = coupon._id;
       discounts.push({ kind: "coupon", code: coupon.code, description: coupon.title, amount, refId: coupon._id });
       remaining -= amount;
@@ -177,9 +272,13 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
       const value = settings.loyalty?.pointValuePaise ?? 0;
       const usablePoints = value > 0 ? Math.min(input.loyaltyPoints, Math.floor(remaining / value)) : 0;
       if (usablePoints > 0) {
-        const updated = await User.findOneAndUpdate({ _id: customerId, loyaltyPoints: { $gte: usablePoints } }, { $inc: { loyaltyPoints: -usablePoints } });
-        if (!updated) throw badRequest("The customer does not have enough loyalty points.", "loyaltyPoints");
-        undo.push(() => User.updateOne({ _id: customerId }, { $inc: { loyaltyPoints: usablePoints } }));
+        if (opts.dryRun) {
+          if (!(await User.exists({ _id: customerId, loyaltyPoints: { $gte: usablePoints } }))) throw badRequest("The customer does not have enough loyalty points.", "loyaltyPoints");
+        } else {
+          const updated = await User.findOneAndUpdate({ _id: customerId, loyaltyPoints: { $gte: usablePoints } }, { $inc: { loyaltyPoints: -usablePoints } });
+          if (!updated) throw badRequest("The customer does not have enough loyalty points.", "loyaltyPoints");
+          undo.push(() => User.updateOne({ _id: customerId }, { $inc: { loyaltyPoints: usablePoints } }));
+        }
         pointsRedeemed = usablePoints;
         discounts.push({ kind: "loyalty", description: `${usablePoints} loyalty points`, amount: usablePoints * value });
         remaining -= usablePoints * value;
@@ -192,11 +291,26 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
       tax: settings.tax ?? {},
     });
 
+    if (opts.dryRun) {
+      return {
+        preview: true as const,
+        customerId,
+        customer,
+        lines,
+        discounts,
+        totals,
+        tax: { name: settings.tax?.enabled ? (settings.tax?.name ?? "") : "", rateBps: settings.tax?.enabled ? (settings.tax?.rateBps ?? 0) : 0, inclusive: !!settings.tax?.inclusive },
+        membership: membership ? { name: membership.name, endsOn: membership.endsOn, servicePercent: membership.servicePercent ?? 0, productPercent: membership.productPercent ?? 0 } : null,
+      };
+    }
+    if (opts.beforePersist) await opts.beforePersist({ total: totals.total, customerId, lines });
+
     const invoice = await Invoice.create({
       number: await nextInvoiceNumber(settings.invoice?.prefix ?? "VG"),
       appointmentId: appointment?._id,
       activeAppointmentKey: appointment?._id,
-      staffId: appointment?.staffId ?? input.staffId,
+      staffId: appointment?.staffId ?? input.staffId ?? lines.find((l) => l.allocations?.length)?.allocations?.[0].staffId,
+      idempotencyKey: input.idempotencyKey,
       customerId,
       customer,
       lines,
@@ -250,7 +364,14 @@ export async function createInvoice(input: InvoiceInput, actor: AuthUser) {
   }
 }
 
-function assertMethodEnabled(settings: Settings, method: PaymentMethod, viaGateway: boolean) {
+/** "advance" and "giftcard" are stored-value redemptions, only recorded by the POS finalize flow. */
+export type RecordMethod = PaymentMethod | "advance" | "giftcard";
+
+function assertMethodEnabled(settings: Settings, method: RecordMethod, viaGateway: boolean, redemption: boolean) {
+  if (method === "advance" || method === "giftcard") {
+    if (!redemption) throw badRequest("Advance and gift card payments are applied from the billing screen.", "method");
+    return;
+  }
   if (method === "online") {
     if (!viaGateway) throw badRequest("Online payments are recorded automatically by the payment gateway.", "method");
     return;
@@ -282,12 +403,13 @@ async function awardLoyalty(inv: InvoiceDoc, settings: Settings) {
 
 export async function recordPayment(
   invoiceId: Types.ObjectId,
-  p: { amount: number; method: PaymentMethod; reference?: string; note?: string; gatewayPaymentId?: string },
+  p: { amount: number; method: RecordMethod; reference?: string; note?: string; gatewayPaymentId?: string; giftCardId?: Types.ObjectId },
   actor: AuthUser | null,
+  opts: { redemption?: boolean } = {},
 ) {
   if (!Number.isInteger(p.amount) || p.amount <= 0) throw badRequest("Payment amount must be greater than zero.", "amount");
   const settings = await getSettings();
-  assertMethodEnabled(settings, p.method, !!p.gatewayPaymentId);
+  assertMethodEnabled(settings, p.method, !!p.gatewayPaymentId, !!opts.redemption);
 
   if (p.gatewayPaymentId) {
     const existing = await Payment.findOne({ gatewayPaymentId: p.gatewayPaymentId, kind: "payment" });
@@ -316,6 +438,7 @@ export async function recordPayment(
       reference: p.reference,
       note: p.note,
       gatewayPaymentId: p.gatewayPaymentId,
+      giftCardId: p.giftCardId,
       recordedBy: actor?.id,
     });
   } catch (err) {
@@ -336,7 +459,7 @@ export async function recordPayment(
 
 export async function refundPayment(
   invoiceId: Types.ObjectId,
-  r: { amount: number; method: PaymentMethod; reason: string },
+  r: { amount: number; method: PaymentMethod | "advance"; reason: string },
   actor: AuthUser,
 ) {
   if (!Number.isInteger(r.amount) || r.amount <= 0) throw badRequest("Refund amount must be greater than zero.", "amount");
@@ -351,6 +474,11 @@ export async function refundPayment(
     throw conflict("Refund cannot exceed the amount paid.");
   }
   const payment = await Payment.create({ invoiceId, kind: "refund", method: r.method, amount: r.amount, note: r.reason, recordedBy: actor.id });
+  if (r.method === "advance") {
+    const credited = await User.findByIdAndUpdate(updated.customerId, { $inc: { advanceBalance: r.amount } }, { new: true }).select("advanceBalance").lean();
+    const after = credited?.advanceBalance ?? r.amount;
+    await AdvanceTransaction.create({ customerId: updated.customerId, type: "refund", amount: r.amount, balanceBefore: after - r.amount, balanceAfter: after, invoiceId, note: `Refund on ${updated.number}: ${r.reason}`, by: actor.id });
+  }
   const invoice = await refreshStatus(invoiceId);
   await audit(actor, "payment.refund", "Invoice", String(invoiceId), `Refunded ${formatINR(r.amount)} on ${updated.number}: ${r.reason}`);
   return { payment, invoice };
@@ -425,7 +553,7 @@ export function serialiseInvoice(inv: InvoiceDoc, payments: { kind: string; meth
     appointmentId: inv.appointmentId ? String(inv.appointmentId) : null,
     customerId: String(inv.customerId),
     customer: inv.customer,
-    lines: inv.lines.map((l) => ({ kind: l.kind, description: l.description, qty: l.qty, unitPrice: l.unitPrice, amount: l.amount })),
+    lines: inv.lines.map((l) => ({ kind: l.kind, description: l.description, qty: l.qty, unitPrice: l.unitPrice, amount: l.amount, discount: l.discount ?? 0, giftCardCode: l.giftCardCode ?? null })),
     subtotal: inv.subtotal,
     discounts: inv.discounts.map((d) => ({ kind: d.kind, code: d.code, description: d.description, amount: d.amount })),
     discountTotal: inv.discountTotal,
@@ -454,4 +582,17 @@ export function invoiceBusiness(settings: Settings) {
     gstin: settings.tax?.enabled ? settings.tax.gstin : "",
     footerNote: settings.invoice?.footerNote ?? "",
   };
+}
+
+type BuildResult = Awaited<ReturnType<typeof buildInvoice>>;
+export type InvoicePreview = Extract<BuildResult, { preview: true }>;
+
+/** Creates and saves an invoice; all prices, discounts and totals are worked out here. */
+export async function createInvoice(input: InvoiceInput, actor: AuthUser, opts: Omit<CreateInvoiceOptions, "dryRun"> = {}) {
+  return (await buildInvoice(input, actor, opts)) as Exclude<BuildResult, { preview: true }>;
+}
+
+/** Same calculation as createInvoice, without saving or claiming anything (live preview on the billing screen). */
+export async function quoteInvoice(input: InvoiceInput, actor: AuthUser) {
+  return (await buildInvoice(input, actor, { dryRun: true })) as InvoicePreview;
 }

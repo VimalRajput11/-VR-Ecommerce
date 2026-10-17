@@ -1,9 +1,10 @@
 import { api, json, readJson } from "@/server/lib/http";
-import { escapeRegex, optEmail, optStr, pagination, phone, str } from "@/server/lib/validate";
-import { conflict } from "@/server/lib/errors";
+import { dateKey, escapeRegex, oneOf, optEmail, optStr, pagination, phone, str } from "@/server/lib/validate";
+import { badRequest, conflict } from "@/server/lib/errors";
 import { requirePermission } from "@/server/auth/session";
 import { Invoice, User } from "@/server/models";
 import { audit } from "@/server/services/audit";
+import { deleteAllCustomers } from "@/server/services/customers-reset";
 
 export const GET = api(async (req) => {
   await requirePermission("customers.view");
@@ -64,9 +65,19 @@ export const POST = api(async (req) => {
     phone: ph,
     email: optEmail(body),
     preferences: optStr(body, "preferences", { max: 1000 }),
+    birthday: body.birthday ? dateKey(body.birthday, "birthday") : undefined,
+    gender: body.gender ? oneOf(body, "gender", ["female", "male", "other"] as const) : undefined,
     role: "customer",
     isGuest: true,
   });
   await audit(user, "customer.create", "User", String(customer._id), `Added customer ${customer.name}`);
-  return json({ customer: { id: String(customer._id), name: customer.name, phone: customer.phone } }, 201);
+  return json({ customer: { id: String(customer._id), name: customer.name, phone: customer.phone, email: customer.email ?? "" } }, 201);
+});
+
+/** Owner only: delete every customer and their data (test data before going live). Body must be { confirm: "DELETE" }. */
+export const DELETE = api(async (req) => {
+  const user = await requirePermission("customers.manage");
+  const body = await readJson(req);
+  if (body.confirm !== "DELETE") throw badRequest("Type DELETE to confirm.", "confirm");
+  return json(await deleteAllCustomers(user));
 });

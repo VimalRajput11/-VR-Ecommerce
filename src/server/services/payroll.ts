@@ -23,7 +23,6 @@ async function serviceSalesByStaff(month: string) {
     { $match: { issuedAt: { $gte: from, $lt: to }, status: { $ne: "void" } } },
     { $lookup: { from: "appointments", localField: "appointmentId", foreignField: "_id", as: "appt", pipeline: [{ $project: { staffId: 1 } }] } },
     { $addFields: { staff: { $ifNull: ["$staffId", { $first: "$appt.staffId" }] } } },
-    { $match: { staff: { $ne: null } } },
     {
       $addFields: {
         // Share of the bill left after discounts, applied to each service line.
@@ -32,7 +31,28 @@ async function serviceSalesByStaff(month: string) {
     },
     { $unwind: "$lines" },
     { $match: { "lines.kind": "service" } },
-    { $group: { _id: "$staff", sales: { $sum: { $multiply: ["$lines.amount", "$netFactor"] } }, billIds: { $addToSet: "$_id" } } },
+    // Each service line is credited to its staff split (e.g. 60% / 40%); older bills without a split
+    // credit the whole line to the bill's stylist.
+    {
+      $addFields: {
+        shares: {
+          $cond: [
+            { $gt: [{ $size: { $ifNull: ["$lines.allocations", []] } }, 0] },
+            { $map: { input: "$lines.allocations", as: "a", in: { staff: "$$a.staffId", pct: "$$a.percent" } } },
+            [{ staff: "$staff", pct: 100 }],
+          ],
+        },
+      },
+    },
+    { $unwind: "$shares" },
+    { $match: { "shares.staff": { $ne: null } } },
+    {
+      $group: {
+        _id: "$shares.staff",
+        sales: { $sum: { $divide: [{ $multiply: ["$lines.amount", "$netFactor", "$shares.pct"] }, 100] } },
+        billIds: { $addToSet: "$_id" },
+      },
+    },
     { $project: { sales: { $round: ["$sales", 0] }, bills: { $size: "$billIds" } } },
   ]);
   return new Map(rows.map((r) => [String(r._id), r]));

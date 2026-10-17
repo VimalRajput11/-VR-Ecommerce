@@ -16,6 +16,9 @@ export interface Range {
   to: Date;
 }
 
+/** Payment methods that spend stored value (not new money received). */
+const STORED_VALUE = ["advance", "giftcard"];
+
 export async function salesSummary({ from, to }: Range) {
   const [inv] = await Invoice.aggregate([
     { $match: { issuedAt: { $gte: from, $lt: to }, status: { $ne: "void" } } },
@@ -39,13 +42,16 @@ export async function salesSummary({ from, to }: Range) {
   let refunds = 0;
   for (const p of payments) {
     const m = (byMethod[p._id.method] ??= { collected: 0, refunded: 0, count: 0 });
+    // Advance / gift card redemptions are listed by method but are not new money: that cash was
+    // counted when the advance or gift card was sold. Refunds back to advance aren't cash out either.
+    const stored = STORED_VALUE.includes(p._id.method);
     if (p._id.kind === "payment") {
       m.collected += p.amount;
       m.count += p.count;
-      received += p.amount;
+      if (!stored) received += p.amount;
     } else {
       m.refunded += p.amount;
-      refunds += p.amount;
+      if (!stored) refunds += p.amount;
     }
   }
   const billed = inv?.billed ?? 0;
@@ -164,7 +170,7 @@ export async function dailySeries({ from, to }: Range) {
       { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$issuedAt", timezone: TIMEZONE } }, amount: { $sum: "$total" } } },
     ]),
     Payment.aggregate([
-      { $match: { createdAt: { $gte: from, $lt: to } } },
+      { $match: { createdAt: { $gte: from, $lt: to }, method: { $nin: STORED_VALUE } } },
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt", timezone: TIMEZONE } },

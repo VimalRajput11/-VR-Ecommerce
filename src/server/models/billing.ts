@@ -1,22 +1,40 @@
 import { Schema, model, models, type InferSchemaType, type Types } from "mongoose";
 import { PAYMENT_METHODS } from "@/lib/constants";
 
+const allocationSchema = new Schema(
+  {
+    staffId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    percent: { type: Number, required: true, min: 1, max: 100 },
+  },
+  { _id: false },
+);
+
+// Line kinds: service / product / custom are sales. giftcard, advance and membership are sold at the
+// counter too, but are fulfilled (card issued, balance credited, membership started) once paid in full.
+export const LINE_KINDS = ["service", "product", "custom", "giftcard", "advance", "membership"] as const;
+
 const lineSchema = new Schema(
   {
-    kind: { type: String, enum: ["service", "product", "custom"], required: true },
-    refId: { type: Schema.Types.ObjectId },
+    kind: { type: String, enum: LINE_KINDS, required: true },
+    refId: { type: Schema.Types.ObjectId }, // service / product / membership plan
     description: { type: String, required: true, maxlength: 200 },
     qty: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
     amount: { type: Number, required: true, min: 0 },
     taxable: { type: Boolean, default: true },
+    // Membership discount on this line (also included in the invoice's "membership" discount).
+    discount: { type: Number, default: 0, min: 0 },
+    // Who performed a service and their share (for commission).
+    allocations: { type: [allocationSchema], default: undefined },
+    // Gift card issued for a giftcard line (set when the bill is fulfilled).
+    giftCardCode: { type: String },
   },
   { _id: false },
 );
 
 const discountSchema = new Schema(
   {
-    kind: { type: String, enum: ["coupon", "manual", "loyalty"], required: true },
+    kind: { type: String, enum: ["membership", "coupon", "manual", "loyalty"], required: true },
     code: String,
     description: { type: String, maxlength: 200 },
     amount: { type: Number, required: true, min: 0 },
@@ -59,11 +77,16 @@ const invoiceSchema = new Schema(
     gatewayOrderId: String,
     // Staff member who did the services (from the appointment, or chosen on a walk-in bill); used for commission.
     staffId: { type: Schema.Types.ObjectId, ref: "User" },
+    // Client-generated key for one "finalize" attempt; a retried request returns the same invoice.
+    idempotencyKey: { type: String },
+    // Set once gift cards / advances / memberships sold on this bill have been issued.
+    fulfilledAt: { type: Date },
     // Random token for the public invoice link sent to customers on WhatsApp (/i/<token>).
     shareToken: { type: String },
   },
   { timestamps: true },
 );
+invoiceSchema.index({ idempotencyKey: 1 }, { unique: true, partialFilterExpression: { idempotencyKey: { $type: "string" } } });
 invoiceSchema.index({ shareToken: 1 }, { unique: true, partialFilterExpression: { shareToken: { $type: "string" } } });
 // Set to appointmentId while the invoice is live and unset when voided, so an appointment can
 // only ever have one live invoice.
@@ -83,7 +106,9 @@ const paymentSchema = new Schema(
   {
     invoiceId: { type: Schema.Types.ObjectId, ref: "Invoice", required: true, index: true },
     kind: { type: String, enum: ["payment", "refund"], required: true },
-    method: { type: String, enum: PAYMENT_METHODS, required: true },
+    // "advance" and "giftcard" are redemptions of stored value, not new money received.
+    method: { type: String, enum: [...PAYMENT_METHODS, "advance", "giftcard"], required: true },
+    giftCardId: { type: Schema.Types.ObjectId, ref: "GiftCard" },
     amount: { type: Number, required: true, min: 1 },
     reference: { type: String, maxlength: 120 },
     note: { type: String, maxlength: 300 },

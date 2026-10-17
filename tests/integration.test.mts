@@ -19,6 +19,8 @@ const { connectDB, disconnectDB } = await import("../src/server/db");
 const models = await import("../src/server/models");
 const booking = await import("../src/server/services/booking");
 const billing = await import("../src/server/services/billing");
+const pos = await import("../src/server/services/pos");
+const payroll = await import("../src/server/services/payroll");
 const { permissionsFor } = await import("../src/lib/permissions");
 const { addDaysToKey, dateKeyIST } = await import("../src/lib/time");
 
@@ -212,5 +214,232 @@ describe("integration (MongoDB)", { skip: !available && "MongoDB not reachable" 
     );
     const inv = await billing.createInvoice({ customer: customer(951), services: [{ serviceId: cutId, qty: 1 }], manualDiscount: { type: "percent", value: 10, reason: "regular" } }, receptionist);
     assert.equal(inv.total, 45000);
+  });
+
+  // ------------------------------------------------------------ POS billing
+  describe("POS billing", () => {
+    const stylist = () => new Types.ObjectId(stylistId);
+    const ownerOid = () => new Types.ObjectId(ownerId);
+    let key = 0;
+    const k = () => `test-key-${++key}`;
+    const cut = (allocations?: { staffId: Types.ObjectId; percent: number }[]) => [{ serviceId: cutId, qty: 1, allocations }];
+    const inv = (id: Types.ObjectId) => models.Invoice.findById(id).lean();
+
+    before(async () => {
+      await BusinessSettings.updateOne({ _id: "business" }, { $set: { "payments.card": true, "payments.upi": true, "tax.enabled": false } });
+    });
+
+    test("split payment settles a bill and staff shares drive commission", async () => {
+      const r = await pos.finalizeBill(
+        { customer: customer(1001), services: cut([{ staffId: stylist(), percent: 60 }, { staffId: ownerOid(), percent: 40 }]) },
+        [{ method: "cash", amount: 20000 }, { method: "upi", amount: 30000 }],
+        owner(),
+        { idempotencyKey: k() },
+      );
+      assert.deepEqual(r.failures, []);
+      const i = await inv(r.invoiceId);
+      assert.equal(i!.status, "paid");
+      assert.equal(i!.balanceDue, 0);
+      assert.equal(await Payment.countDocuments({ invoiceId: r.invoiceId, kind: "payment" }), 2);
+      await models.PayProfile.updateOne({ userId: stylist() }, { $set: { commissionPercent: 10, monthlySalary: 0 } }, { upsert: true });
+      const [row] = await payroll.payrollStatement(dateKeyIST().slice(0, 7), stylist());
+      assert.ok(row.serviceSales >= 30000); // includes 60% of this ₹500 cut
+      assert.equal(row.commission, Math.round(row.serviceSales / 10));
+      // The owner did no other services this month, so they are credited exactly their 40% share.
+      await models.PayProfile.updateOne({ userId: ownerOid() }, { $set: { commissionPercent: 5 } }, { upsert: true });
+      const [ownerRow] = await payroll.payrollStatement(dateKeyIST().slice(0, 7), ownerOid());
+      assert.equal(ownerRow.serviceSales, 20000);
+      assert.equal(ownerRow.commission, 1000);
+    });
+
+    test("partial payment leaves the remaining balance; cash over the balance gives change", async () => {
+      const part = await pos.finalizeBill({ customer: customer(1002), services: cut() }, [{ method: "upi", amount: 30000 }], owner(), { idempotencyKey: k() });
+      const p = await inv(part.invoiceId);
+      assert.equal(p!.status, "partially_paid");
+      assert.equal(p!.balanceDue, 20000);
+
+      const cash = await pos.finalizeBill({ customer: customer(1003), services: cut() }, [{ method: "cash", amount: 60000 }], owner(), { idempotencyKey: k() });
+      assert.equal(cash.change, 10000);
+      const c = await inv(cash.invoiceId);
+      assert.equal(c!.status, "paid");
+      assert.equal(c!.amountPaid, 50000);
+      await assert.rejects(pos.finalizeBill({ customer: customer(1004), services: cut() }, [{ method: "card", amount: 50001 }], owner(), { idempotencyKey: k() }), { status: 400 });
+    });
+
+    test("the same finalize request never creates two invoices", async () => {
+      const key1 = k();
+      const run = () => pos.finalizeBill({ customer: customer(1005), services: cut() }, [{ method: "cash", amount: 50000 }], owner(), { idempotencyKey: key1 });
+      const [a, b] = await Promise.all([run(), run()]);
+      assert.equal(String(a.invoiceId), String(b.invoiceId));
+      assert.ok(a.duplicate || b.duplicate);
+      const again = await run();
+      assert.equal(again.duplicate, true);
+      assert.equal(await models.Invoice.countDocuments({ idempotencyKey: key1 }), 1);
+      assert.equal(await Payment.countDocuments({ invoiceId: a.invoiceId }), 1);
+    });
+
+    test("advance deposit, redemption, overdraw and concurrent use are audited and never go negative", async () => {
+      const dep = await pos.finalizeBill({ customer: customer(1010), advances: [{ amount: 50000 }] }, [{ method: "cash", amount: 50000 }], owner(), { idempotencyKey: k() });
+      const customerId = (await inv(dep.invoiceId))!.customerId;
+      assert.equal((await User.findById(customerId).lean())!.advanceBalance, 50000);
+
+      await assert.rejects(
+        pos.finalizeBill({ customer: { ...customer(1010), userId: String(customerId) }, services: cut() }, [{ method: "advance", amount: 50001 }], owner(), { idempotencyKey: k() }),
+        { status: 400 },
+      );
+      // Two bills each trying to use the full ₹500 at once: only one deduction can succeed.
+      const both = await Promise.all(
+        [0, 1].map(() =>
+          pos.finalizeBill({ customer: { ...customer(1010), userId: String(customerId) }, services: cut() }, [{ method: "advance", amount: 50000 }], owner(), { idempotencyKey: k() }).catch((e) => e),
+        ),
+      );
+      const balance = (await User.findById(customerId).lean())!.advanceBalance;
+      assert.equal(balance, 0);
+      const redeemed = await models.AdvanceTransaction.find({ customerId, type: "redeem" }).lean();
+      assert.equal(redeemed.reduce((s, t) => s + t.amount, 0), 50000);
+      assert.equal(redeemed[0].balanceBefore, 50000);
+      assert.equal(redeemed[0].balanceAfter, 0);
+      assert.ok(both.some((r) => r instanceof Error || (r.failures && r.failures.length)));
+
+      // A refund to advance credits it back with its own record.
+      const paidId = both.find((r) => !(r instanceof Error) && !r.failures.length).invoiceId;
+      await billing.refundPayment(paidId, { amount: 10000, method: "advance", reason: "test" }, owner());
+      assert.equal((await User.findById(customerId).lean())!.advanceBalance, 10000);
+      assert.equal(await models.AdvanceTransaction.countDocuments({ customerId, type: "refund" }), 1);
+    });
+
+    test("gift cards are issued once paid, redeemed up to their balance, and rejected when expired", async () => {
+      await assert.rejects(pos.finalizeBill({ customer: customer(1020), giftCards: [{ amount: 100000 }] }, [{ method: "upi", amount: 50000 }], owner(), { idempotencyKey: k() }), { status: 400 });
+      const sold = await pos.finalizeBill({ customer: customer(1020), giftCards: [{ amount: 100000 }] }, [{ method: "upi", amount: 100000 }], owner(), { idempotencyKey: k() });
+      const code = (await inv(sold.invoiceId))!.lines[0].giftCardCode!;
+      assert.match(code, /^GC-/);
+      assert.equal((await pos.giftCardStatus(code)).balance, 100000);
+
+      await pos.finalizeBill({ customer: customer(1021), services: cut() }, [{ method: "giftcard", amount: 40000, giftCardCode: code }, { method: "cash", amount: 10000 }], owner(), { idempotencyKey: k() });
+      assert.equal((await pos.giftCardStatus(code)).balance, 60000);
+      await assert.rejects(pos.finalizeBill({ customer: customer(1022), services: [{ serviceId: colourId, qty: 1 }] }, [{ method: "giftcard", amount: 70000, giftCardCode: code }], owner(), { idempotencyKey: k() }), { status: 400 });
+      await models.GiftCard.updateOne({ code }, { $set: { expiresAt: new Date(Date.now() - 1000) } });
+      await assert.rejects(pos.finalizeBill({ customer: customer(1023), services: cut() }, [{ method: "giftcard", amount: 1000, giftCardCode: code }], owner(), { idempotencyKey: k() }), { status: 400 });
+    });
+
+    test("memberships start once paid and discount later bills; the quote matches the final invoice", async () => {
+      const plan = await models.MembershipPlan.create({ name: "Gold", price: 200000, durationDays: 365, servicePercent: 10 });
+      const sale = await pos.finalizeBill({ customer: customer(1030), memberships: [{ planId: plan._id }] }, [{ method: "cash", amount: 200000 }], owner(), { idempotencyKey: k() });
+      const customerId = (await inv(sale.invoiceId))!.customerId;
+      assert.ok(await billing.activeMembership(customerId));
+
+      const input = { customer: { ...customer(1030), userId: String(customerId) }, services: cut() };
+      const quote = await billing.quoteInvoice(input, owner());
+      assert.equal(quote.totals.discountTotal, 5000);
+      assert.equal(quote.totals.total, 45000);
+      const r = await pos.finalizeBill(input, [{ method: "cash", amount: 45000 }], owner(), { idempotencyKey: k() });
+      const i = await inv(r.invoiceId);
+      assert.equal(i!.total, quote.totals.total);
+      assert.equal(i!.lines[0].discount, 5000);
+      assert.equal(i!.status, "paid");
+    });
+
+    test("staff shares are validated on the server", async () => {
+      await assert.rejects(
+        pos.finalizeBill({ customer: customer(1040), services: cut([{ staffId: stylist(), percent: 70 }, { staffId: ownerOid(), percent: 40 }]) }, [], owner(), { idempotencyKey: k() }),
+        { status: 400 },
+      );
+      await BusinessSettings.updateOne({ _id: "business" }, { $set: { "billing.requireFullAllocation": true } });
+      await assert.rejects(pos.finalizeBill({ customer: customer(1041), services: cut() }, [], owner(), { idempotencyKey: k() }), { status: 400 });
+      await assert.rejects(pos.finalizeBill({ customer: customer(1042), services: cut([{ staffId: stylist(), percent: 50 }]) }, [], owner(), { idempotencyKey: k() }), { status: 400 });
+      await BusinessSettings.updateOne({ _id: "business" }, { $set: { "billing.requireFullAllocation": false } });
+    });
+
+    test("saved bills: incomplete drafts save, stale edits are refused, finalizing twice is safe", async () => {
+      const draft = await pos.saveDraft({ services: [{ serviceId: String(cutId), qty: 1 }] }, { services: cut() }, owner(), {});
+      assert.equal(draft.status, "open");
+      assert.match(draft.number, /^D-\d{4}$/);
+      const v2 = await pos.saveDraft({ customer: customer(1050), services: [] }, { customer: customer(1050), services: cut() }, owner(), { id: draft._id, version: 1 });
+      assert.equal(v2.version, 2);
+      assert.equal(v2.previewTotal, 50000);
+      await assert.rejects(pos.saveDraft({}, { services: cut() }, owner(), { id: draft._id, version: 1 }), { status: 409 });
+
+      const first = await pos.finalizeBill({ customer: customer(1050), services: cut() }, [{ method: "cash", amount: 50000 }], owner(), { idempotencyKey: k(), draftId: draft._id });
+      assert.equal((await models.BillDraft.findById(draft._id).lean())!.status, "finalized");
+      const second = await pos.finalizeBill({ customer: customer(1050), services: cut() }, [{ method: "cash", amount: 50000 }], owner(), { idempotencyKey: k(), draftId: draft._id });
+      assert.equal(second.duplicate, true);
+      assert.equal(String(second.invoiceId), String(first.invoiceId));
+    });
+
+    test("owner-issued gift cards work like sold ones and record no sale", async () => {
+      const card = await pos.issueGiftCard({ amount: 30000, note: "Diwali gift" }, owner());
+      assert.match(card.code, /^GC-/);
+      assert.equal((await pos.giftCardStatus(card.code)).balance, 30000);
+      assert.equal(await models.Invoice.countDocuments({ "lines.giftCardCode": card.code }), 0);
+      await pos.finalizeBill({ customer: customer(1070), services: cut() }, [{ method: "giftcard", amount: 30000, giftCardCode: card.code }, { method: "cash", amount: 20000 }], owner(), { idempotencyKey: k() });
+      assert.equal((await pos.giftCardStatus(card.code)).balance, 0);
+      await assert.rejects(pos.finalizeBill({ customer: customer(1071), services: cut() }, [{ method: "giftcard", amount: 100, giftCardCode: card.code }], owner(), { idempotencyKey: k() }), { status: 400 });
+    });
+
+    test("advance and gift card payments can't be recorded outside the billing flow", async () => {
+      const i = await billing.createInvoice({ customer: customer(1060), services: cut() }, owner());
+      await assert.rejects(billing.recordPayment(i._id, { amount: 1000, method: "advance" }, owner()), { status: 400 });
+      await assert.rejects(billing.recordPayment(i._id, { amount: 1000, method: "giftcard" }, owner()), { status: 400 });
+    });
+
+    test("deleting one customer removes only their history and gives back coupon uses", async () => {
+      const reset = await import("../src/server/services/customers-reset");
+      await Coupon.create({ code: "ONEOFF", title: "One off", type: "flat", value: 1000, startsAt: new Date(Date.now() - 86_400_000), endsAt: new Date(Date.now() + 86_400_000), maxRedemptions: 5 });
+      const r = await pos.finalizeBill({ customer: customer(1080), services: cut(), couponCode: "ONEOFF" }, [{ method: "cash", amount: 49000 }], owner(), { idempotencyKey: k() });
+      const victim = (await models.Invoice.findById(r.invoiceId).lean())!.customerId;
+      const others = await User.countDocuments({ role: "customer", _id: { $ne: victim } });
+      assert.equal((await Coupon.findOne({ code: "ONEOFF" }).lean())!.redemptions, 1);
+
+      const res = await reset.deleteCustomer(victim, owner());
+      assert.equal(res.invoices, 1);
+      assert.equal(await User.exists({ _id: victim }), null);
+      assert.equal(await models.Invoice.countDocuments({ customerId: victim }), 0);
+      assert.equal(await Payment.countDocuments({ invoiceId: r.invoiceId }), 0);
+      assert.equal((await Coupon.findOne({ code: "ONEOFF" }).lean())!.redemptions, 0);
+      assert.equal(await User.countDocuments({ role: "customer" }), others);
+      await assert.rejects(reset.deleteCustomer(victim, owner()), { status: 404 });
+    });
+
+    test("deleting staff: no history removes them, history keeps the name but blocks sign-in, upcoming bookings block it", async () => {
+      const { deleteStaff } = await import("../src/server/services/staff-delete");
+      const fresh = await User.create({ name: "New Desk", email: "newdesk@test.local", role: "receptionist" });
+      assert.deepEqual(await deleteStaff(fresh._id, owner()), { removed: "deleted" });
+      assert.equal(await User.exists({ _id: fresh._id }), null);
+
+      const paid = await User.create({ name: "Old Stylist", email: "old@test.local", role: "stylist", passwordHash: "x", staff: { bookable: true } });
+      await models.PayEntry.create({ userId: paid._id, month: "2026-01", type: "payment", amount: 1000, date: "2026-01-31" });
+      await models.Session.create({ tokenHash: "t-old", userId: paid._id, expiresAt: new Date(Date.now() + 3_600_000) });
+      assert.deepEqual(await deleteStaff(paid._id, owner()), { removed: "archived" });
+      const kept = await User.findById(paid._id).select("+passwordHash").lean();
+      assert.equal(kept!.name, "Old Stylist");
+      assert.equal(kept!.email, undefined);
+      assert.equal(kept!.passwordHash, undefined);
+      assert.equal(kept!.active, false);
+      assert.equal(await User.exists({ email: "old@test.local" }), null);
+      assert.equal(await models.Session.countDocuments({ userId: paid._id }), 0);
+
+      // The test stylist has upcoming appointments from earlier tests.
+      const upcoming = await Appointment.countDocuments({ staffId: stylistId, status: { $in: ["pending", "confirmed"] }, start: { $gte: new Date() } });
+      if (upcoming) await assert.rejects(deleteStaff(new Types.ObjectId(stylistId), owner()), { status: 409 });
+      await assert.rejects(deleteStaff(new Types.ObjectId(ownerId), owner()), { status: 409 });
+    });
+
+    // Runs last: wipes every customer in the test database.
+    test("deleting all customers removes their history and keeps staff and services", async () => {
+      const reset = await import("../src/server/services/customers-reset");
+      assert.ok((await User.countDocuments({ role: "customer" })) > 0);
+      const r = await reset.deleteAllCustomers(owner());
+      assert.ok(r.customers > 0 && r.invoices > 0);
+      assert.equal(await User.countDocuments({ role: "customer" }), 0);
+      assert.equal(await models.Invoice.countDocuments(), 0);
+      assert.equal(await Payment.countDocuments(), 0);
+      assert.equal(await Appointment.countDocuments(), 0);
+      assert.equal(await models.AdvanceTransaction.countDocuments(), 0);
+      assert.equal(await models.CustomerMembership.countDocuments(), 0);
+      assert.equal(await models.BillDraft.countDocuments(), 0);
+      assert.ok(await User.exists({ _id: ownerId }));
+      assert.ok(await Service.exists({ _id: cutId }));
+      await assert.rejects(reset.deleteAllCustomers({ id: stylistId, name: "Stylist", role: "stylist", permissions: permissionsFor("stylist") }), { status: 403 });
+    });
   });
 });

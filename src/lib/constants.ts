@@ -29,11 +29,14 @@ export const ACTIVE_STATUSES: AppointmentStatus[] = ["pending", "confirmed", "ch
 
 export const PAYMENT_METHODS = ["cash", "upi", "card", "online"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
-export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+// Includes the stored-value methods recorded by the billing screen.
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod | "advance" | "giftcard", string> = {
   cash: "Cash",
   upi: "UPI",
   card: "Card",
   online: "Online",
+  advance: "Advance balance",
+  giftcard: "Gift card",
 };
 
 export const INVOICE_STATUS_LABELS: Record<string, string> = {

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, TimerOff } from "lucide-react";
 import { apiFetch, ApiClientError, useApi } from "@/lib/api";
 import WhatsAppOfferModal from "@/components/dashboard/WhatsAppOfferModal";
 import { useToast } from "@/context/ToastContext";
+import { useConfirm } from "@/context/ConfirmContext";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { Alert, Badge, Button, Checkbox, EmptyState, ErrorState, Input, Modal, PageHeader, Select, Spinner, Table, Td, Textarea, Th } from "@/components/ui";
 import { istLocalToIso } from "@/components/dashboard/StaffForms";
@@ -45,7 +46,29 @@ function Offers() {
   const { data, error, loading, reload } = useApi<{ coupons: Coupon[] }>("/api/admin/coupons");
   const [editing, setEditing] = useState<Coupon | "new" | null>(null);
   const [sharing, setSharing] = useState<Coupon | null>(null);
-  const [now] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  const toast = useToast();
+  const confirm = useConfirm();
+
+  // Ends a live offer immediately: the code stops working at billing from now on.
+  async function expire(c: Coupon) {
+    const ok = await confirm({
+      title: `Expire ${c.code} now?`,
+      danger: true,
+      confirmLabel: "Expire now",
+      message: <p>Customers won&apos;t be able to use this offer any more, and it disappears from the website. Past uses still count in reports.</p>,
+    });
+    if (!ok) return;
+    try {
+      const endsAt = new Date();
+      await apiFetch(`/api/admin/coupons/${c.id}`, { method: "PATCH", body: { endsAt: endsAt.toISOString() } });
+      toast(`${c.code} has expired.`);
+      setNow(endsAt.getTime() + 1000);
+      reload();
+    } catch (e) {
+      toast((e as ApiClientError).message);
+    }
+  }
   return (
     <div>
       <PageHeader
@@ -76,6 +99,7 @@ function Offers() {
           <tbody>
             {data.coupons.map((c) => {
               const live = c.active && new Date(c.startsAt).getTime() <= now && new Date(c.endsAt).getTime() >= now;
+              const status = !c.active ? "Off" : live ? "Live" : new Date(c.startsAt).getTime() > now ? "Scheduled" : "Expired";
               return (
                 <tr key={c.id} className="cursor-pointer hover:bg-cream/50" onClick={() => setEditing(c)}>
                   <Td className="font-mono font-semibold">{c.code}</Td>
@@ -91,18 +115,36 @@ function Offers() {
                     {c.redemptions}
                     {c.maxRedemptions ? ` / ${c.maxRedemptions}` : ""}
                   </Td>
-                  <Td>{live ? <Badge className="bg-[#eef5ef] text-success">Live</Badge> : <Badge>{c.active ? "Scheduled / ended" : "Off"}</Badge>}</Td>
                   <Td>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSharing(c);
-                      }}
-                    >
-                      <MessageCircle size={14} aria-hidden /> WhatsApp
-                    </Button>
+                    <Badge className={status === "Live" ? "bg-[#eef5ef] text-success" : status === "Scheduled" ? "bg-[#f6efe4] text-gold-deep" : status === "Expired" ? "bg-[#fbeceb] text-danger" : undefined}>
+                      {status}
+                    </Badge>
+                  </Td>
+                  <Td>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {live && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            expire(c);
+                          }}
+                        >
+                          <TimerOff size={14} aria-hidden /> Expire now
+                        </Button>
+                      )}
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSharing(c);
+                        }}
+                      >
+                        <MessageCircle size={14} aria-hidden /> WhatsApp
+                      </Button>
+                    </div>
                   </Td>
                 </tr>
               );

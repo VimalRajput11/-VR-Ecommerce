@@ -6,6 +6,7 @@ import { hashPassword, validatePasswordStrength } from "@/server/auth/password";
 import { User, type UserDoc } from "@/server/models";
 import { parseBreaks, parseExtraPermissions, parseWorkingHours, serialiseStaff } from "@/server/services/staff";
 import { audit } from "@/server/services/audit";
+import { deleteStaff } from "@/server/services/staff-delete";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -63,4 +64,10 @@ export const PATCH = api<Ctx>(async (req, ctx) => {
   const fields = Object.keys(set).map((k) => (k === "passwordHash" ? "password reset" : k.replace("staff.", "")));
   await audit(user, "staff.update", "User", String(id), `Updated ${target.name}: ${fields.join(", ")}`);
   return json({ staff: serialiseStaff(updated!) });
+});
+
+/** Owner only: delete an employee. They can't sign in again; past records keep their name. */
+export const DELETE = api<Ctx>(async (_req, ctx) => {
+  const user = await requirePermission("staff.manage");
+  return json(await deleteStaff(objectId((await ctx.params).id), user));
 });

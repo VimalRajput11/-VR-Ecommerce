@@ -3,10 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { apiFetch, ApiClientError, qs, useApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
+import { useConfirm } from "@/context/ConfirmContext";
 import { Alert, Badge, Button, Checkbox, EmptyState, ErrorState, Input, Modal, PageHeader, Pagination, Spinner, Stat, StatusBadge, Table, Td, Textarea, Th, buttonClass } from "@/components/ui";
 import { RequirePermission } from "@/components/dashboard/DashboardShell";
 import { formatINR } from "@/lib/money";
@@ -34,8 +35,56 @@ export default function CustomersPage() {
   );
 }
 
+/** Owner only: wipe every customer and their history (e.g. test data before going live). */
+function DeleteAllCustomersModal({ count, onClose, onDone }: { count: number; onClose: () => void; onDone: () => void }) {
+  const toast = useToast();
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<ApiClientError | null>(null);
+
+  async function run() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await apiFetch<{ customers: number; appointments: number; invoices: number }>("/api/admin/customers", { method: "DELETE", body: { confirm } });
+      toast(`Deleted ${res.customers} customers, ${res.appointments} appointments and ${res.invoices} invoices.`);
+      onDone();
+      onClose();
+    } catch (e) {
+      setError(e as ApiClientError);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title="Delete all customers?"
+      footer={
+        <Button variant="danger" disabled={confirm !== "DELETE"} loading={busy} onClick={run}>
+          Delete all customers
+        </Button>
+      }
+    >
+      {error && <Alert tone="error" className="mb-4">{error.message}</Alert>}
+      <div className="space-y-3 text-sm">
+        <p>
+          This permanently deletes <strong>all {count} customer{count === 1 ? "" : "s"}</strong> and everything linked to them: their <strong>bills and payments</strong>,{" "}
+          appointments, reviews, advance balances, memberships, gift cards, saved bills and notifications. Reports go back to zero and invoice numbers restart.
+        </p>
+        <p className="text-stone">Staff, services, offers, products and stock levels are kept.</p>
+        <p className="font-medium text-danger">This can&apos;t be undone.</p>
+        <Input label='Type "DELETE" to confirm' value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
+      </div>
+    </Modal>
+  );
+}
+
 function Customers() {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
+  const [clearing, setClearing] = useState(false);
   const params = useSearchParams();
   const [q, setQ] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -64,10 +113,16 @@ function Customers() {
                 <Download size={16} aria-hidden /> Export CSV
               </a>
             )}
+            {user?.role === "owner" && !!data?.total && !debounced && (
+              <Button variant="secondary" onClick={() => setClearing(true)}>
+                <Trash2 size={16} aria-hidden /> Delete all
+              </Button>
+            )}
             {(can("customers.manage") || can("appointments.manage")) && <Button onClick={() => setAdding(true)}>Add customer</Button>}
           </>
         }
       />
+      {clearing && <DeleteAllCustomersModal count={data?.total ?? 0} onClose={() => setClearing(false)} onDone={reload} />}
       <Input label="Search customers" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, phone or email" wrapClassName="mb-4 max-w-md" />
       {error && <ErrorState error={error} onRetry={reload} />}
       {loading && !data ? (
@@ -122,7 +177,9 @@ interface Detail {
 }
 
 function CustomerModal({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: () => void }) {
-  const { can } = useAuth();
+  const { user, can } = useAuth();
+  const confirm = useConfirm();
+  const [deleting, setDeleting] = useState(false);
   const toast = useToast();
   const { data, error, loading } = useApi<Detail>(id ? `/api/admin/customers/${id}` : null);
   const [form, setForm] = useState({ name: "", phone: "", email: "", preferences: "", internalNotes: "", marketingConsent: false });
@@ -142,6 +199,40 @@ function CustomerModal({ id, onClose, onSaved }: { id: string | null; onClose: (
   }
   const manage = can("customers.manage");
   const notesAllowed = data?.customer.internalNotes !== undefined;
+
+  // Owner only: remove this customer and their history for good.
+  async function remove() {
+    if (!data) return;
+    const c = data.customer;
+    const bills = `${data.invoices.length} bill${data.invoices.length === 1 ? "" : "s"}`;
+    const appts = `${data.appointments.length} appointment${data.appointments.length === 1 ? "" : "s"}`;
+    const ok = await confirm({
+      title: `Delete ${c.name}?`,
+      danger: true,
+      confirmLabel: "Delete customer",
+      message: (
+        <>
+          <p>
+            This permanently deletes <strong>{c.name}</strong> and their <strong>{bills}</strong>, <strong>{appts}</strong>, payments, advance balance, membership and gift cards.
+          </p>
+          <p className="font-medium text-danger">This can&apos;t be undone.</p>
+        </>
+      ),
+    });
+    if (!ok) return;
+    setDeleting(true);
+    setSaveError(null);
+    try {
+      await apiFetch(`/api/admin/customers/${id}`, { method: "DELETE" });
+      toast(`${c.name} deleted.`);
+      onSaved();
+      onClose();
+    } catch (e) {
+      setSaveError(e as ApiClientError);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   async function save() {
     setBusy(true);
@@ -163,7 +254,20 @@ function CustomerModal({ id, onClose, onSaved }: { id: string | null; onClose: (
       onClose={onClose}
       title={data?.customer.name ?? "Customer"}
       size="xl"
-      footer={(manage || notesAllowed) && <Button onClick={save} loading={busy}>Save changes</Button>}
+      footer={
+        <>
+          {user?.role === "owner" && data && (
+            <Button variant="ghost" className="mr-auto text-danger" loading={deleting} onClick={remove}>
+              <Trash2 size={16} aria-hidden /> Delete customer
+            </Button>
+          )}
+          {(manage || notesAllowed) && (
+            <Button onClick={save} loading={busy}>
+              Save changes
+            </Button>
+          )}
+        </>
+      }
     >
       {loading && !data ? (
         <Spinner />

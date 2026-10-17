@@ -1,8 +1,8 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Printer } from "lucide-react";
+import { ChevronLeft, Printer, Receipt } from "lucide-react";
 import { apiFetch, ApiClientError, useApi } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
@@ -36,6 +36,27 @@ function InvoiceDetail({ id }: { id: string }) {
   const [voidReason, setVoidReason] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState<ApiClientError | null>(null);
+  const [printMode, setPrintMode] = useState<"a4" | "thermal">("a4");
+  const autoPrinted = useRef(false);
+
+  // Print in the chosen layout once the copy for printing has rendered.
+  function printAs(mode: "a4" | "thermal") {
+    setPrintMode(mode);
+    setTimeout(() => window.print(), 150);
+  }
+
+  // ?print=1 / ?print=thermal (from the billing screen's receipt buttons) prints once the invoice loads.
+  useEffect(() => {
+    if (!data || autoPrinted.current) return;
+    const p = new URLSearchParams(window.location.search).get("print");
+    if (!p) return;
+    autoPrinted.current = true;
+    const t = setTimeout(() => {
+      setPrintMode(p === "thermal" ? "thermal" : "a4");
+      setTimeout(() => window.print(), 400);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [data]);
 
   async function act(body: Record<string, unknown>, label: string) {
     setBusy(label);
@@ -67,13 +88,18 @@ function InvoiceDetail({ id }: { id: string }) {
         <Link href="/dashboard/billing" className="inline-flex items-center gap-1 text-sm text-stone hover:text-charcoal">
           <ChevronLeft size={16} aria-hidden /> All invoices
         </Link>
-        <Button variant="secondary" onClick={() => window.print()}>
-          <Printer size={16} aria-hidden /> Print receipt
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => printAs("a4")}>
+            <Printer size={16} aria-hidden /> Print / save PDF
+          </Button>
+          <Button variant="secondary" onClick={() => printAs("thermal")}>
+            <Receipt size={16} aria-hidden /> Thermal receipt
+          </Button>
+        </div>
       </div>
       {actionError && <Alert tone="error" className="no-print mb-4">{actionError.message}</Alert>}
       <div className="grid gap-6 xl:grid-cols-[1fr_340px]">
-        <InvoiceView invoice={inv} business={data.business} />
+        <InvoiceView invoice={inv} business={data.business} printMode={printMode} />
         {can("billing.manage") && inv.status !== "void" && (
           <div className="no-print space-y-6">
             <WhatsAppInvoiceCard invoiceId={inv.id} />
@@ -122,6 +148,7 @@ function InvoiceDetail({ id }: { id: string }) {
                     <option value="upi">UPI</option>
                     <option value="card">Card</option>
                     <option value="online">Online (processed in gateway)</option>
+                    <option value="advance">Customer&apos;s advance balance</option>
                   </Select>
                   <Input label="Reason" required value={refund.reason} onChange={(e) => setRefund({ ...refund, reason: e.target.value })} />
                   <Button

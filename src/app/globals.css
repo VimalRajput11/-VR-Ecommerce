@@ -159,6 +159,18 @@ body {
   display: none;
 }
 
+/* The thermal receipt is laid out off-screen at roll width (instead of hidden) so its height can be
+   measured for the printed page size, and its logo loads before printing. */
+.print-only.thermal-print {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 80mm;
+  padding: 2mm 3mm;
+  visibility: hidden;
+}
+
 /* Zero page margin stops the browser printing its own date/title/URL header and footer;
    the spacing comes from .print-only's padding instead. */
 @page {
@@ -188,6 +200,11 @@ body {
   .invoice-sheet * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  /* Thermal receipt: 80 mm roll, no frame or colour. */
+  .print-only.thermal-print {
+    position: static;
+    visibility: visible;
   }
   /* Gold frame around the printed invoice. */
   .invoice-sheet {

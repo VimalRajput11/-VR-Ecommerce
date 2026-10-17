@@ -74,6 +74,7 @@ interface InvoiceLike {
   balanceDue: number;
   customerId: unknown;
   customer?: { name?: string | null; phone?: string | null } | null;
+  lines?: { kind: string; amount: number; giftCardCode?: string | null }[];
 }
 
 export function invoiceMessage(inv: InvoiceLike, url: string, settings: Settings, base: string) {
@@ -87,12 +88,38 @@ export function invoiceMessage(inv: InvoiceLike, url: string, settings: Settings
     "",
     `View or download your invoice:\n${url}`,
     "",
+    // Gift cards bought on this bill: the code is what the customer needs.
+    ...(inv.lines ?? [])
+      .filter((l) => l.kind === "giftcard" && l.giftCardCode)
+      .flatMap((l) => [`🎁 Your gift card: *${l.giftCardCode}* worth ${formatINR(l.amount)}`, ""]),
     `Plan your next visit:\n${base}/book`,
     "",
     "We look forward to welcoming you back soon!",
     "",
     `With gratitude,\nYour ${settings.name} family`,
     `📞 ${formatPhone(salonPhone(settings))}`,
+  ].join("\n");
+}
+
+/** Gift card message: the code, value, expiry and how to use it. */
+export function giftCardMessage(card: { code: string; balance: number; initialValue: number; expiresAt?: Date | null }, settings: Settings, base: string, name?: string | null) {
+  const partlyUsed = card.balance < card.initialValue;
+  return [
+    `🎁 A gift card from ${settings.name} ✨`,
+    "",
+    `Hi ${firstName(name)},`,
+    "",
+    `Here is your gift card ${partlyUsed ? "with" : "worth"} *${formatINR(card.balance)}*${partlyUsed ? " left" : ""}.`,
+    `Code: *${card.code}*`,
+    card.expiresAt ? `Valid till ${formatDate(card.expiresAt)}.` : "No expiry date.",
+    "",
+    "Show this code at the salon when you pay. Anything you don't use stays on the card for next time.",
+    "",
+    `📅 Book your visit: ${base}/book`,
+    `📞 ${formatPhone(salonPhone(settings))}`,
+    `📍 ${settings.address?.mapUrl || SALON_MAP_URL}`,
+    "",
+    `With love,\nYour ${settings.name} family`,
   ].join("\n");
 }
 
