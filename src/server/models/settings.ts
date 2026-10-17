@@ -62,7 +62,8 @@ const settingsSchema = new Schema(
       minLeadMinutes: { type: Number, default: 60, min: 0, max: 10080 },
       maxAdvanceDays: { type: Number, default: 60, min: 1, max: 365 },
       staffSelectionEnabled: { type: Boolean, default: true },
-      guestBookingEnabled: { type: Boolean, default: true },
+      // Off: customers must sign in (or create an account) to book online.
+      guestBookingEnabled: { type: Boolean, default: false },
       autoConfirm: { type: Boolean, default: false },
       requireEmail: { type: Boolean, default: false },
       cancellationCutoffHours: { type: Number, default: 4, min: 0, max: 168 },
