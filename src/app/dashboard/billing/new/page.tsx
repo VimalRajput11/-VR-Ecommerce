@@ -252,7 +252,17 @@ function NewBill() {
         <div className="space-y-6">
           <Card title="Discounts">
             <div className="space-y-3">
-              <Input label="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} />
+              <Input
+                label="Coupon code"
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value.replace(/\s+/g, ""))}
+                className="uppercase"
+                autoCapitalize="characters"
+                autoCorrect="off"
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={30}
+              />
               {can("billing.discount") && (
                 <div className="grid grid-cols-[110px_1fr] gap-2">
                   <Select label="Discount" value={discount.type} onChange={(e) => setDiscount({ ...discount, type: e.target.value })}>

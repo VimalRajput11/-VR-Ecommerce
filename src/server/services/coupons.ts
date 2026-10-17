@@ -4,7 +4,8 @@ import type { CouponDoc } from "@/server/models";
 
 export function parseCoupon(body: Record<string, unknown>, partial: boolean) {
   const out: Record<string, unknown> = {};
-  if (!partial || "code" in body) out.code = str(body, "code", { max: 30, pattern: /^[A-Za-z0-9_-]+$/, label: "Code" }).toUpperCase();
+  // Any letters, numbers and symbols (e.g. DIWALI@25, 50%OFF); no spaces.
+  if (!partial || "code" in body) out.code = str(body, "code", { max: 30, pattern: /^\S+$/, label: "Code" }).toUpperCase();
   if (!partial || "title" in body) out.title = str(body, "title", { max: 120, label: "Title" });
   const description = clearableStr(body, "description", { max: 500 });
   if (description !== undefined) out.description = description;

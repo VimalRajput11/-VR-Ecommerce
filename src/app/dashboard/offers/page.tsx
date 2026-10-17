@@ -174,7 +174,20 @@ function CouponModal({ coupon, onClose, onSaved }: { coupon: Coupon | null; onCl
     <Modal open onClose={onClose} title={coupon ? `Edit ${coupon.code}` : "New offer"} size="lg" footer={<Button onClick={save} loading={busy}>Save</Button>}>
       {error && <Alert tone="error" className="mb-4">{error.message}</Alert>}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Code" required value={f.code} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase() })} hint="Letters, numbers, - and _" />
+        {/* Shown in capitals via CSS and saved in capitals by the server; converting while typing breaks phone keyboards. */}
+        <Input
+          label="Code"
+          required
+          value={f.code}
+          onChange={(e) => setF({ ...f, code: e.target.value.replace(/\s+/g, "") })}
+          className="uppercase"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          maxLength={30}
+          hint="Letters, numbers and symbols, no spaces (e.g. DIWALI@25)"
+        />
         <Input label="Title" required value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="e.g. Diwali Glow Offer" />
         <Textarea label="Description" rows={2} wrapClassName="sm:col-span-2" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
         <Select label="Kind" value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })}>
