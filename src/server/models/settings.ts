@@ -7,7 +7,7 @@ const hoursSchema = new Schema(
   {
     day: { type: Number, min: 0, max: 6, required: true },
     closed: { type: Boolean, default: false },
-    open: { type: String, default: "10:00" },
+    open: { type: String, default: "10:30" },
     close: { type: String, default: "20:00" },
     breaks: { type: [breakSchema], default: [] },
   },
@@ -17,7 +17,7 @@ const hoursSchema = new Schema(
 export const DEFAULT_HOURS = [0, 1, 2, 3, 4, 5, 6].map((day) => ({
   day,
   closed: false,
-  open: "10:00",
+  open: "10:30",
   close: "20:00",
   breaks: [],
 }));
@@ -55,7 +55,7 @@ const settingsSchema = new Schema(
       facebook: { type: String, default: "", maxlength: 200 },
     },
     hours: { type: [hoursSchema], default: DEFAULT_HOURS },
-    hoursVerified: { type: Boolean, default: false },
+    hoursVerified: { type: Boolean, default: true },
     booking: {
       onlineEnabled: { type: Boolean, default: true },
       slotIntervalMin: { type: Number, default: 15, min: 5, max: 60 },

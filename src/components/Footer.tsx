@@ -65,9 +65,11 @@ export default function Footer({ settings }: { settings: PublicSettings }) {
             <li className="flex gap-2.5">
               <Clock size={16} className="mt-0.5 shrink-0 text-gold" aria-hidden />
               <span>{settings.hoursVerified ? hoursSummary(settings.hours) : "Opening hours will be published soon."}</span>
-            </li>          </ul>
+            </li>
+          </ul>
         </div>
       </div>
+
       <div className="border-t border-ivory/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-6 text-xs text-mist md:flex-row md:px-8">
           <p>&copy; {year} {settings.name}. All rights reserved.</p>

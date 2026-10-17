@@ -5,9 +5,8 @@ import { weekdayName } from "@/lib/time";
 
 export default function VisitInfo({ settings, dark }: { settings: PublicSettings; dark?: boolean }) {
   const muted = dark ? "text-mist" : "text-stone";
-  const address = [settings.address.line1, settings.address.locality, settings.address.city, settings.address.state, settings.address.postalCode]
-    .filter(Boolean)
-    .join(", ");
+  // Skip repeated parts, e.g. city and state both "Delhi".
+  const address = [...new Set([settings.address.line1, settings.address.locality, settings.address.city, settings.address.state, settings.address.postalCode].filter(Boolean))].join(", ");
   const mapsQuery = encodeURIComponent(`${settings.name}, ${address}`);
   return (
     <div className="grid gap-8 md:grid-cols-2">
@@ -75,6 +74,17 @@ export default function VisitInfo({ settings, dark }: { settings: PublicSettings
         ) : (
           <p className={`text-sm ${muted}`}>Our opening hours will be published soon. Available appointment times are always shown when you book online.</p>
         )}
+        {/* Google's keyless embed searches the salon name + address; "Get directions" opens the exact saved pin. */}
+        <div className="mt-6 overflow-hidden rounded-lg border border-gold/30 shadow-sm">
+          <iframe
+            title={`Map showing ${settings.name}`}
+            src={`https://maps.google.com/maps?q=${mapsQuery}&z=16&output=embed`}
+            className="block h-64 w-full border-0 md:h-72"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            allowFullScreen
+          />
+        </div>
       </div>
     </div>
   );
